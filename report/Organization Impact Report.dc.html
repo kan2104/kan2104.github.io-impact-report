@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics="">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:#e0e0e0;-webkit-font-smoothing:antialiased}
+  a{color:#007010}
+  a:hover{color:#117025}
+  ::selection{background:#85c093;color:#09352e}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</helmet>
+<div ref="{{ rootRef }}" style="--ink:#09352e; --ink-soft:#6c7a79; --paper:#e0e0e0; --ash:#e5e5e5; --card:#ffffff; --line:#cad3d2; --moss:#85c093; --fern:#007010; --pine:#117025; --charcoal:#29211e; --indigo:#433787; --denim:'Inter',ui-sans-serif,system-ui,sans-serif; --cinetype:'JetBrains Mono',ui-monospace,monospace; font-family:var(--denim);color:var(--ink);background:var(--paper);line-height:1.5;letter-spacing:0.012em">
+
+  
+
+  <nav style="position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;gap:24px;padding:16px 40px;background:rgba(224,224,224,0.92);backdrop-filter:blur(6px);box-shadow:0 -0.5px 0 0 var(--line) inset">
+    <div style="font-family:var(--cinetype);font-weight:500;font-size:14px;letter-spacing:0.2em;color:var(--ink)"><br></div>
+    <div style="display:flex;gap:20px;flex-wrap:wrap;overflow-x:auto">
+      <sc-for list="{{ navItems }}" as="item" hint-placeholder-count="8">
+        <a href="{{ item.href }}" style="font-family:var(--denim);font-size:12px;font-weight:500;letter-spacing:-0.01em;color:var(--ink-soft);text-decoration:none;white-space:nowrap" style-hover="color:var(--fern)">{{ item.label }}</a>
+      </sc-for>
+    </div>
+  </nav><header data-screen-label="hero" style="min-height: 74vh; display: flex; flex-direction: column; justify-content: center; padding: 100px 40px 64px; max-width: 1280px; margin: 0 auto; box-sizing: border-box; width: 1339px; height: 615px">
+    <div style="font-family:var(--cinetype);font-size:12px;letter-spacing:0.3em;text-transform:uppercase;color:var(--indigo);font-weight:500;margin-bottom:24px">[ 20th Anniversary Impact Report ]</div>
+    <h1 style="font-family:var(--denim);font-weight:500;font-size:48px;line-height:1.11;margin:0 0 24px;letter-spacing:0;max-width:820px">{{ heroHeadline }}</h1>
+    <p style="font-size:16px;line-height:1.44;letter-spacing:0.012em;color:var(--ink-soft);max-width:600px;margin:0 0 8px">For twenty years, <i>Organization </i>has unlocked career trajectories for tens of thousands of Fellows and reshaped how leading employers build meritocratic workplaces.</p>
+    <div style="margin-top:48px;display:flex;align-items:center;gap:12px;color:var(--ink-soft);font-family:var(--cinetype);font-size:11px;letter-spacing:0.05em">
+      <div style="width:32px;height:0.5px;background:var(--ink-soft)"></div>
+      SCROLL — TWO DECADES OF IMPACT
+    </div>
+  </header>
+
+  <section id="numbers" data-screen-label="by-the-numbers" style="padding:64px 40px;max-width:1280px;margin:0 auto;box-shadow:0 0.5px 0 0 var(--line) inset">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px">
+      <span style="font-family:var(--cinetype);font-size:12px;letter-spacing:0.3em;color:var(--ink)">[ 01 ]</span>
+      <span style="font-family:var(--cinetype);font-size:11px;letter-spacing:0.05em;color:var(--ink-soft)">[ Scale ]</span>
+    </div>
+    <h2 style="font-family:var(--denim);font-weight:500;font-size:32px;line-height:1.17;margin:0 0 32px">By the Numbers</h2>
+
+    
+
+    <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:16px">
+      <sc-for list="{{ statsView }}" as="s" hint-placeholder-count="7">
+        <div ref="{{ s.setRef }}" style="background:var(--card);border-radius:12px;box-shadow:0 0 0 0.5px var(--line) inset;padding:20px;min-height:168px;flex:1 1 250px;max-width:280px;display:flex;flex-direction:column;justify-content:space-between">
+          <div style="font-family:var(--denim);font-weight:500;font-size:48px;line-height:1.11;color:var(--ink)">{{ s.display }}</div>
+          <div>
+            <div style="font-size:14px;font-weight:500;margin:14px 0 4px;color:var(--ink)">{{ s.label }}</div>
+            <div style="font-size:12px;color:var(--ink-soft)">{{ s.sub }}</div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section id="vision" data-screen-label="vision-for-change" style="padding:64px 40px;background:var(--charcoal);color:#f4f3f1">
+    <div style="max-width:1280px;margin:0 auto">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px">
+        <span style="font-family:var(--cinetype);font-size:12px;letter-spacing:0.3em;color:#a9a49e">[ 02 ]</span>
+        <span style="font-family:var(--cinetype);font-size:11px;letter-spacing:0.05em;color:#7d7871">[ Chaos to Clarity ]</span>
+      </div>
+      <h2 style="font-family:var(--denim);font-weight:500;font-size:32px;margin:0 0 20px;color:#f4f3f1">Our Approach</h2>
+      <p style="max-width:640px;color:#c4c0ba;font-size:16px;line-height:1.44;margin-bottom:48px">A child born into the bottom 40% of U.S. income has a 60% chance of remaining there as an adult. <i>Organization</i> is working to rewrite that story with a four-pronged approach.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px">
+        <sc-for list="{{ visionPillars }}" as="p" hint-placeholder-count="4">
+          <div style="box-shadow:0.5px 0 0 0 rgba(244,243,241,0.18) inset;padding-top:0;border-top:0.5px solid rgba(244,243,241,0.25);padding-top:18px">
+            <h3 style="font-family:var(--denim);font-weight:500;font-size:18px;margin:0 0 10px;color:#f4f3f1">{{ p.title }}</h3>
+            <p style="font-size:13px;color:#a9a49e;margin:0;line-height:1.5">{{ p.desc }}</p>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <section id="pathway" data-screen-label="college-to-career" style="padding:64px 40px;max-width:1280px;margin:0 auto;box-shadow:0 0.5px 0 0 var(--line) inset">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px">
+      <span style="font-family:var(--cinetype);font-size:12px;letter-spacing:0.3em;color:var(--ink)">[ 03 ]</span>
+      <span style="font-family:var(--cinetype);font-size:11px;letter-spacing:0.05em;color:var(--ink-soft)">[ Pipeline ]</span>
+    </div>
+    <h2 style="font-family:var(--denim);font-weight:500;font-size:32px;margin:0 0 20px">Fixing the College-to-Career Pipeline</h2>
+    <p style="max-width:680px;color:var(--ink-soft);font-size:16px;line-height:1.44;margin-bottom:40px">60% of four-year graduates of color are unemployed or underemployed relative to their degree. College alone doesn't close that gap — most students lack the social capital to meet the employer bar on their own. <i>Organization</i> builds the readiness bridge between colleges and employers.</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:24px;margin-bottom:56px">
+      <sc-for list="{{ pipelineStats }}" as="ps" hint-placeholder-count="4">
+        <div style="box-shadow:1px 0 0 0 var(--line) inset;padding-left:16px">
+          <div style="font-family:var(--denim);font-weight:500;font-size:32px">{{ ps.value }}</div>
+          <div style="font-size:12px;color:var(--ink-soft);margin-top:4px">{{ ps.label }}</div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px">
+      <sc-for list="{{ modelColumns }}" as="m" hint-placeholder-count="3">
+        <div style="background:var(--card);border-radius:12px;box-shadow:0 0 0 0.5px var(--line) inset;padding:20px">
+          <div style="font-family:var(--cinetype);font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:var(--fern);font-weight:400;margin-bottom:12px">{{ m.title }}</div>
+          <ul style="margin:0;padding-left:16px;font-size:14px;color:var(--ink-soft);display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ m.points }}" as="pt" hint-placeholder-count="3">
+              <li>{{ pt }}</li>
+            </sc-for>
+          </ul>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section id="stories" data-screen-label="alumni-stories" style="padding:64px 40px;background:var(--ash);box-shadow:0 0.5px 0 0 var(--line) inset, 0 -0.5px 0 0 var(--line) inset">
+    <div style="max-width:1280px;margin:0 auto">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px">
+        <span style="font-family:var(--cinetype);font-size:12px;letter-spacing:0.3em;color:var(--ink)">[ 04 ]</span>
+        <span style="font-family:var(--cinetype);font-size:11px;letter-spacing:0.05em;color:var(--ink-soft)">[ People ]</span>
+      </div>
+      <h2 style="font-family:var(--denim);font-weight:500;font-size:32px;margin:0 0 16px">Alumni Stories</h2>
+      <p style="max-width:640px;color:var(--ink-soft);font-size:16px;line-height:1.44;margin-bottom:32px">Names have been replaced to protect individual privacy. Every story below is drawn from a real Fellow's journey through <i>Organization's</i> programs.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:36px">
+        <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="4">
+          <button onClick="{{ t.onClick }}" style="box-shadow:0 0 0 0.5px var(--line) inset;background:var(--card);padding:9px 16px;border-radius:12px;font-family:var(--denim);font-size:13px;font-weight:500;cursor:pointer;color:var(--ink-soft);border:none" style-hover="box-shadow:0 0 0 0.5px var(--ink) inset;color:var(--ink)">{{ t.label }}</button>
+        </sc-for>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:16px">
+        <sc-for list="{{ filteredStories }}" as="story" hint-placeholder-count="3">
+          <div style="background:var(--card);border-radius:12px;box-shadow:0 0 0 0.5px var(--line) inset;padding:20px;display:flex;flex-direction:column;gap:14px;flex:1 1 360px;max-width:400px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <div style="width:36px;height:36px;border-radius:50%;box-shadow:0 0 0 1px var(--ink) inset;background:var(--card);color:var(--ink);display:flex;align-items:center;justify-content:center;font-family:var(--denim);font-weight:500;font-size:14px">{{ story.initial }}</div>
+              <div>
+                <div style="font-weight:500;font-size:14px">{{ story.label }}</div>
+                <div style="font-size:12px;color:var(--ink-soft)">{{ story.tag }}</div>
+              </div>
+            </div>
+            <p style="margin:0;font-size:14px;line-height:1.5;color:var(--ink-soft);flex:1">{{ story.body }}</p>
+            <p style="margin:0;font-family:var(--denim);font-style:italic;font-size:14px;color:var(--ink);box-shadow:1px 0 0 0 var(--fern) inset;padding-left:14px">"{{ story.quote }}"</p>
+            <div style="display:inline-flex;align-self:flex-start;font-family:var(--cinetype);font-size:11px;letter-spacing:0.3em;text-transform:uppercase;color:var(--fern);border:1px solid var(--line);border-radius:4px;padding:4px 10px">{{ story.categoryLabel }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <section id="trajectories" data-screen-label="multiplier-effect" style="padding:64px 40px;max-width:1280px;margin:0 auto">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px">
+      <span style="font-family:var(--cinetype);font-size:12px;letter-spacing:0.3em;color:var(--ink)">[ 05 ]</span>
+      <span style="font-family:var(--cinetype);font-size:11px;letter-spacing:0.05em;color:var(--ink-soft)">[ Trajectory ]</span>
+    </div>
+    <h2 style="font-family:var(--denim);font-weight:500;font-size:32px;margin:0 0 20px">The Multiplier Effect</h2>
+    <p style="max-width:680px;color:var(--ink-soft);font-size:16px;line-height:1.44;margin-bottom:40px">As alumni advance into executive roles, they open doors for the next generation — extending economic mobility to exponentially more people. <i>Organization's</i> programs span every career stage, from first job to the C-suite.</p>
+
+    <div style="margin-bottom:56px">
+      <canvas ref="{{ multiplierCanvasRef }}" style="width:100%;height:460px;display:block;cursor:crosshair"></canvas>
+      <div style="display:flex;justify-content:center;margin-top:8px">
+        <span style="font-family:var(--cinetype);font-size:11px;letter-spacing:0.05em;color:var(--ink-soft);text-align:center;max-width:560px">Each point is a person across Organization's network — Fellows, alumni, and the connections between them. Move your cursor through the field.</span>
+      </div>
+    </div>
+
+    <div style="position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+      <div style="position:absolute;top:5px;left:5%;right:5%;height:0.5px;background:var(--ink)"></div>
+      <sc-for list="{{ programLadder }}" as="pl" hint-placeholder-count="3">
+        <div style="position:relative;padding-top:28px;text-align:center">
+          <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:10px;height:10px;border-radius:50%;background:var(--card);box-shadow:0 0 0 0.5px var(--ink) inset"></div>
+          <div style="font-family:var(--cinetype);font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:var(--fern);margin-bottom:10px">{{ pl.stage }}</div>
+          <div style="font-family:var(--denim);font-weight:500;font-size:16px;margin-bottom:8px">{{ pl.title }}</div>
+          <div style="font-size:13px;color:var(--ink-soft);line-height:1.5">{{ pl.desc }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section id="employers" data-screen-label="employer-practices" style="padding:64px 40px;background:var(--ash);box-shadow:0 0.5px 0 0 var(--line) inset, 0 -0.5px 0 0 var(--line) inset">
+    <div style="max-width:1280px;margin:0 auto;display:grid;grid-template-columns:minmax(260px,1fr) minmax(260px,1.2fr);gap:48px">
+      <div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px">
+          <span style="font-family:var(--cinetype);font-size:12px;letter-spacing:0.3em;color:var(--ink)">[ 06 ]</span>
+        </div>
+        <h2 style="font-family:var(--denim);font-weight:500;font-size:32px;margin:0 0 16px">Strengthening Employer Practices</h2><p style="color:var(--ink-soft);font-size:16px;line-height:1.44;margin:0">With most Americans working for large companies, employers are one of the most powerful levers for expanding economic opportunity at scale. <i>Organization's</i> analytics, benchmarking, and coaching help major employers elevate the rigor of their talent practices.</p>
+        
+      </div>
+      <ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:0">
+        <sc-for list="{{ employerPractices }}" as="ep" hint-placeholder-count="4">
+          <li style="padding:18px 0;box-shadow:0 0.5px 0 0 var(--line) inset;font-size:14px;color:var(--ink)">{{ ep }}</li>
+        </sc-for>
+      </ul>
+    </div>
+  </section>
+
+  <section id="ventures" data-screen-label="entrepreneurship" style="padding:64px 40px;max-width:1280px;margin:0 auto">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px">
+      <span style="font-family:var(--cinetype);font-size:12px;letter-spacing:0.3em;color:var(--ink)">[ 07 ]</span>
+      <span style="font-family:var(--cinetype);font-size:11px;letter-spacing:0.05em;color:var(--ink-soft)">[ Ventures ]</span>
+    </div>
+    <h2 style="font-family:var(--denim);font-weight:500;font-size:32px;margin:0 0 20px">Cultivating Entrepreneurs</h2>
+    <p style="max-width:680px;color:var(--ink-soft);font-size:16px;line-height:1.44;margin-bottom:40px">The startup ecosystem is America's engine of wealth creation <i>and</i> its epicenter of wealth disparity. <i>Organization</i> is building a more inclusive ecosystem that broadens capital access and makes networks more meritocratic.</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:24px">
+      <sc-for list="{{ ventureStats }}" as="vs" hint-placeholder-count="4">
+        <div style="box-shadow:1px 0 0 0 var(--line) inset;padding-left:16px">
+          <div style="font-family:var(--denim);font-weight:500;font-size:32px">{{ vs.value }}</div>
+          <div style="font-size:12px;color:var(--ink-soft);margin-top:4px">{{ vs.label }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section id="next" data-screen-label="whats-next" style="padding:64px 40px;box-shadow:0 0.5px 0 0 var(--line) inset">
+    <div style="max-width:1280px;margin:0 auto">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px">
+        <span style="font-family:var(--cinetype);font-size:12px;letter-spacing:0.3em;color:var(--ink)">[ 08 ]</span>
+        <span style="font-family:var(--cinetype);font-size:11px;letter-spacing:0.05em;color:var(--ink-soft)">[ Horizon ]</span>
+      </div>
+      <h2 style="font-family:var(--denim);font-weight:500;font-size:32px;margin:0 0 20px">What's Next</h2>
+      
+      <p style="max-width:680px;color:var(--ink-soft);font-size:16px;line-height:1.44;margin-bottom:48px"><i>Organization</i> is focused on three priorities for the next chapter to ensure forward progress and a proven multiplier effect.</p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px">
+        <sc-for list="{{ nextPillars }}" as="np" hint-placeholder-count="3">
+          <div>
+            <div style="font-family:var(--cinetype);font-size:12px;letter-spacing:0.15em;color:var(--fern);margin-bottom:10px">[ {{ np.num }} ]</div>
+            <h3 style="font-family:var(--denim);font-weight:500;font-size:18px;margin:0 0 10px">{{ np.title }}</h3>
+            <p style="font-size:14px;color:var(--ink-soft);margin:0;line-height:1.5">{{ np.desc }}</p>
+          </div>
+        </sc-for>
+      </div>
+    </div><div ref="{{ alumniChartRef }}" style="background:var(--card);border-radius:12px;box-shadow:0 0 0 0.5px var(--line) inset;padding:20px;margin-bottom:24px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px">
+        <span style="font-family:var(--cinetype);font-size:11px;letter-spacing:0.05em;color:var(--ink-soft)">[ Alumni Network Growth ]</span>
+        <span class="alumni-chart-count" style="font-family:var(--denim);font-size:16px;font-weight:500;color:var(--ink)">20 <span style="font-family:var(--cinetype);font-size:11px;font-weight:400;color:var(--ink-soft);letter-spacing:0.05em">alumni · 2003</span></span>
+      </div>
+      <div class="alumni-chart-body" style="position:relative"></div>
+    </div>
+  </section>
+
+  <section id="giving" data-screen-label="impact-of-giving" style="padding:64px 40px;max-width:1280px;margin:0 auto">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px">
+      <span style="font-family:var(--cinetype);font-size:12px;letter-spacing:0.3em;color:var(--ink)">[ 09 ]</span>
+      <span style="font-family:var(--cinetype);font-size:11px;letter-spacing:0.05em;color:var(--ink-soft)">[ Giving ]</span>
+    </div>
+    <h2 style="font-family:var(--denim);font-weight:500;font-size:32px;margin:0 0 20px">The Impact of Giving</h2>
+    <p style="max-width:680px;color:var(--ink-soft);font-size:16px;line-height:1.44;margin-bottom:32px">Philanthropy covers the balance of <i>Organization's</i> work with employer partnerships funding. Through these funds, scaling programs and launching new initiatives in service of economic mobility is possible.</p>
+    <div style="display:flex;align-items:baseline;gap:20px;flex-wrap:wrap;margin-bottom:28px">
+      <div style="font-family:var(--denim);font-weight:500;font-size:48px">$30M+</div>
+      <div style="font-size:13px;color:var(--ink-soft);max-width:280px">Raised in the most recent campaign year from foundations, corporations, and individual donors</div>
+    </div>
+    <button onClick="{{ toggleDonor }}" style="border:none;background:var(--moss);color:var(--ink);border-radius:12px;padding:10px 20px;font-family:var(--denim);font-size:14px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:8px">
+      View giving breakdown
+      <span>{{ donorChevron }}</span>
+    </button>
+    <sc-if value="{{ donorOpen }}" hint-placeholder-val="{{ false }}">
+      <div style="margin-top:28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;animation:fadeUp 0.3s ease">
+        <sc-for list="{{ donorTiers }}" as="d" hint-placeholder-count="6">
+          <div style="background:var(--card);border-radius:12px;box-shadow:0 0 0 0.5px var(--line) inset;padding:20px">
+            <div style="font-family:var(--cinetype);font-size:11px;color:var(--ink-soft);letter-spacing:0.05em">{{ d.range }}</div>
+            <div style="font-family:var(--denim);font-weight:500;font-size:24px;margin:8px 0 4px">{{ d.count }}</div>
+            <div style="font-size:12px;color:var(--ink-soft)">supporters · {{ d.amount }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+  </section>
+
+  <footer style="padding:56px 40px;background:var(--charcoal);color:#a9a49e">
+    <div style="max-width:1280px;margin:0 auto;display:flex;flex-wrap:wrap;justify-content:space-between;gap:24px;align-items:flex-end">
+      <div>
+        <div style="font-family:var(--cinetype);font-weight:500;font-size:14px;letter-spacing:0.2em;color:#f4f3f1;margin-bottom:8px"><i>ORGANIZATION</i></div>
+        <div style="font-size:13px;max-width:420px">Expanding economic mobility for individuals and employers alike.</div>
+      </div>
+      <div style="font-family:var(--cinetype);font-size:11px;letter-spacing:0.02em;max-width:360px;color:#7d7871">[ Prototype · anonymized · portfolio use only ]</div>
+    </div>
+  </footer>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900},&quot;heroHeadline&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Two Decades of Breaking Barriers to Economic Mobility&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;defaultStoryFilter&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;all&quot;,&quot;options&quot;:[&quot;all&quot;,&quot;entrepreneurship&quot;,&quot;executive&quot;,&quot;career&quot;],&quot;tsType&quot;:&quot;string&quot;},&quot;donorSectionDefaultOpen&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  state = {
+    counts: {},
+    activeTab: (this.props && this.props.defaultStoryFilter) || 'all',
+    donorOpen: !!(this.props && this.props.donorSectionDefaultOpen)
+  };
+
+  statsConfig = [
+    { id:'placement', target:90, suffix:'%', label:'Fellows land jobs each year', sub:'$90K median starting salary' },
+    { id:'fellows', target:7000, suffix:'+', comma:true, label:'Fellows served annually', sub:'13,000+ alumni in the network' },
+    { id:'senior', target:1600, suffix:'+', comma:true, label:'Alumni in senior leadership roles', sub:'Across corporations, VC, and public service' },
+    { id:'employers', target:225, suffix:'+', label:'Employer partners', sub:'Reaching 7M+ employees nationwide' },
+    { id:'multiplier', isStatic:true, staticDisplay:'2\u20133\u00d7', label:'Higher MBA acceptance rate', sub:'Versus the overall rate at top programs' },
+    { id:'promoted', target:75, suffix:'%', label:'Promoted within 1 year', sub:"Of completing the mid-career program" },
+    { id:'mba', target:98, suffix:'%', label:'MBA Fellows admitted to top schools', sub:'$78M in merit scholarships secured' }
+  ];
+
+  visionPillars = [
+    { title:'Delivering Economic Mobility for Students', desc:'Fixing the college-to-career transition so students secure high-trajectory jobs.' },
+    { title:'Maximizing Career Trajectories', desc:'Ensuring individuals realize their full potential and multiply their impact.' },
+    { title:'Cultivating Entrepreneurs & High-Growth Businesses', desc:'Empowering leaders to scale ventures that create jobs and opportunity for others.' },
+    { title:'Strengthening Employer Talent Practices', desc:'Enhancing employer competitiveness while expanding economic opportunity.' }
+  ];
+
+  pipelineStats = [
+    { value:'2,500+', label:'New undergrads enrolled last year' },
+    { value:'400+', label:'Partner colleges nationwide' },
+    { value:'50%', label:'First-generation college students' },
+    { value:'40%', label:'Of Fellows from families earning under $50K' }
+  ];
+
+  modelColumns = [
+    { title:'Coaching', points:['Sports-inspired coaching, not mentoring','Personalizes the playbook for each Fellow','Drives accountability and informed decisions'] },
+    { title:'Playbook', points:['Personal clarity on strengths and goals','Understanding how decision-makers define "the bar"','A detailed roadmap to meet and exceed it'] },
+    { title:'Connections', points:['Personal introductions to employer recruiters','A network of peers and mentors','Support decoding the unwritten rules of the game'] }
+  ];
+
+  stories = [
+    { key:'a', initial:'A', label:'Person A', tag:"Undergrad Fellow '07 · Senior Executive Fellow '21", category:'entrepreneurship', categoryLabel:'Entrepreneurship',
+      body:"Grew up in public housing. Organization's Undergrad program put him on an upward trajectory in finance, landing his first job at a global financial services firm financing affordable housing. After rising through real estate finance roles, he co-founded an affordable housing development firm now recognized as a top developer in its state.",
+      quote:'From growing up in public housing to helping build it, I want to use my story to help others shape theirs.' },
+    { key:'b', initial:'B', label:'Person B', tag:"MBA Fellow '04 \u00b7 Senior Executive Fellow '21", category:'executive', categoryLabel:'Executive Leadership',
+      body:"A career spent advancing education equity across philanthropy and programmatic leadership. Organization's MBA program paired her with a coach at a pivotal moment, helping her grow from individual contributor to senior leader overseeing multimillion-dollar budgets at a venture philanthropy focused on early education.",
+      quote:'Being paired with a coach created a welcoming space for me to be vulnerable enough to strengthen my leadership skills.' },
+    { key:'c', initial:'C', label:'Person C', tag:"MBA Fellow '06", category:'executive', categoryLabel:'Executive Leadership',
+      body:"Now CEO of a national education-focused venture philanthropy, she came to Organization's MBA program while questioning her path in finance. She has since led a large portfolio investing in education entrepreneurs of color and championed landmark research on diverse leadership in education outcomes.",
+      quote:'The power of the community was incredible. We were all at a critical inflection point, investing in ourselves in deeper ways.' },
+    { key:'d', initial:'D', label:'Person D', tag:"MBA Fellow '05 \u00b7 Senior Executive Fellow '22", category:'career', categoryLabel:'Career Growth',
+      body:"A first-generation college, corporate, and MBA leader who credits Organization's MBA program with building the foundation for his career. He went on to lead talent strategy at a global athletic apparel company and now leads talent acquisition at a national gaming and entertainment company, mentoring first-generation students along the way.",
+      quote:'Sponsorship and mentorship matter. Who you invest in and how you foster talent development truly matters.' },
+    { key:'e', initial:'E', label:'Person E', tag:"MBA Fellow '09 \u00b7 Senior Executive Fellow '21 \u00b7 Startup Accelerator Fellow '23", category:'entrepreneurship', categoryLabel:'Entrepreneurship',
+      body:"Raised in a multigenerational steel-mill family, he brought an innovator's mindset to capital equipment leadership roles at an electric vehicle manufacturer and in aerospace manufacturing. Organization's Startup Accelerator program helped him define his business and refine his pitch, leading to acceptance into a prestigious national accelerator and $5.1M raised for his equipment-sourcing startup.",
+      quote:'The Startup Accelerator program helped me define my business, build out a product demo, refine my value proposition, and so much more.' }
+  ];
+
+  programLadder = [
+    { stage:'Early Career', title:'MBA Programs', desc:'Preparing early-career professionals for MBA admission, high-trajectory internships, and full-time offers.' },
+    { stage:'Mid-Career', title:'Career Advancement Program', desc:'Helping mid-career managers advance through key promotion thresholds toward senior management.' },
+    { stage:'Executive', title:'Senior Executive Leadership', desc:'Helping senior leaders sustain and advance their careers, and amplify their impact.' }
+  ];
+
+  employerPractices = [
+    'Strengthen inclusive recruiting practices',
+    'Clarify the high-performance and promotion bar for all employees',
+    'Boost retention through employee resource group engagement',
+    'Expand supplier diversity and procurement practices'
+  ];
+
+  ventureStats = [
+    { value:'700+', label:'Current Fellows are start-up founders' },
+    { value:'209', label:'Start-ups founded by alumni' },
+    { value:'82', label:'Alumni working in venture capital' },
+    { value:'$3.5B+', label:'Raised across 15 alumni-led VC funds' }
+  ];
+
+  nextPillars = [
+    { num:'01', title:'Scaling Economic Mobility Work', desc:"Deepening reach among low-income, first-generation students and students of color making the college-to-career transition." },
+    { num:'02', title:'Growing the Alumni Community', desc:'Expanding from 13,000+ alumni today toward 18,000+, and deepening the multiplier effect of senior leaders.' },
+    { num:'03', title:'Celebrating 20 Years, Building the Next 20', desc:'A national storytelling campaign and a 2026 national conference convening thousands of Fellows, alumni, and partners.' }
+  ];
+
+  alumniData = [
+    { year: 2003, value: 20 }, { year: 2005, value: 150 }, { year: 2007, value: 420 },
+    { year: 2009, value: 900 }, { year: 2011, value: 1600 }, { year: 2013, value: 2500 },
+    { year: 2015, value: 3700 }, { year: 2017, value: 5100 }, { year: 2019, value: 6900 },
+    { year: 2021, value: 8800 }, { year: 2023, value: 10800 }, { year: 2024, value: 11700 },
+    { year: 2025, value: 12600 }, { year: 2026, value: 13500 }
+  ];
+
+  // Builds a zoomed-in "camera" animation that follows the ascending line from
+  // 2003 as it climbs, then pulls back at the end to reveal the full 2003→2026
+  // trend. Rendered imperatively (like the canvas above) rather than through
+  // template bindings, since it drives a continuous rAF timeline.
+  initAlumniChart(container) {
+    if (!container || this._alumniInited) return;
+    this._alumniInited = true;
+
+    const x0 = 50, x1 = 980, y0 = 20, y1 = 210;
+    const yearMin = 2003, yearMax = 2026, valMax = 14000;
+    const xs = (year) => x0 + ((year - yearMin) / (yearMax - yearMin)) * (x1 - x0);
+    const ys = (val) => y1 - (val / valMax) * (y1 - y0);
+    const points = this.alumniData.map((d) => ({ x: xs(d.year), y: ys(d.value), year: d.year, value: d.value }));
+    const last = points[points.length - 1];
+
+    const segLens = [];
+    let totalLen = 0;
+    for (let i = 1; i < points.length; i++) {
+      const l = Math.hypot(points[i].x - points[i - 1].x, points[i].y - points[i - 1].y);
+      segLens.push(l);
+      totalLen += l;
+    }
+    // arc-length parameterization so the "camera" travels at constant speed
+    const pointAtLenFraction = (t) => {
+      const target = t * totalLen;
+      let acc = 0;
+      for (let i = 0; i < segLens.length; i++) {
+        if (acc + segLens[i] >= target || i === segLens.length - 1) {
+          const segT = segLens[i] > 0 ? (target - acc) / segLens[i] : 0;
+          const a = points[i], b = points[i + 1];
+          const ct = Math.max(0, Math.min(1, segT));
+          return {
+            x: a.x + (b.x - a.x) * ct, y: a.y + (b.y - a.y) * ct,
+            value: a.value + (b.value - a.value) * ct, year: a.year + (b.year - a.year) * ct,
+          };
+        }
+        acc += segLens[i];
+      }
+      return last;
+    };
+
+    const linePathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+    const areaPathD = `M${points[0].x.toFixed(1)},${y1} ` + points.map((p) => `L${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ') + ` L${points[points.length - 1].x.toFixed(1)},${y1} Z`;
+
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const body = container.querySelector('.alumni-chart-body');
+    const countEl = container.querySelector('.alumni-chart-count');
+    const fmtCount = (n, label) => `${Math.round(n).toLocaleString('en-US')} <span style="font-family:var(--cinetype);font-size:11px;font-weight:400;color:var(--ink-soft);letter-spacing:0.05em">alumni · ${label}</span>`;
+
+    const svg = document.createElementNS(svgNS, 'svg');
+    svg.setAttribute('viewBox', '0 0 1000 260');
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    svg.style.width = '100%';
+    svg.style.height = '240px';
+    svg.style.display = 'block';
+    svg.style.overflow = 'visible';
+
+    const defs = document.createElementNS(svgNS, 'defs');
+    const clipPathEl = document.createElementNS(svgNS, 'clipPath');
+    const clipId = 'alumniRevealClip-' + Math.random().toString(36).slice(2, 9);
+    clipPathEl.setAttribute('id', clipId);
+    clipPathEl.setAttribute('clipPathUnits', 'userSpaceOnUse');
+    const revealRect = document.createElementNS(svgNS, 'rect');
+    revealRect.setAttribute('x', x0); revealRect.setAttribute('y', 0);
+    revealRect.setAttribute('width', 0); revealRect.setAttribute('height', 260);
+    clipPathEl.appendChild(revealRect);
+    defs.appendChild(clipPathEl);
+    svg.appendChild(defs);
+
+    const gridG = document.createElementNS(svgNS, 'g');
+    [0, 5000, 10000, 14000].forEach((v) => {
+      const line = document.createElementNS(svgNS, 'line');
+      line.setAttribute('x1', x0); line.setAttribute('x2', x1);
+      line.setAttribute('y1', ys(v)); line.setAttribute('y2', ys(v));
+      line.setAttribute('stroke', '#cad3d2'); line.setAttribute('stroke-width', 0.5);
+      line.setAttribute('stroke-dasharray', '2 3');
+      line.style.opacity = 0;
+      gridG.appendChild(line);
+    });
+    svg.appendChild(gridG);
+
+    const areaEl = document.createElementNS(svgNS, 'path');
+    areaEl.setAttribute('d', areaPathD);
+    areaEl.setAttribute('fill', '#77aa83');
+    areaEl.setAttribute('clip-path', `url(#${clipId})`);
+    areaEl.style.opacity = 0;
+    svg.appendChild(areaEl);
+
+    const lineEl = document.createElementNS(svgNS, 'path');
+    lineEl.setAttribute('d', linePathD);
+    lineEl.setAttribute('fill', 'none');
+    lineEl.setAttribute('stroke', '#09352e');
+    lineEl.setAttribute('stroke-width', 1.5);
+    lineEl.style.strokeDasharray = String(totalLen);
+    lineEl.style.strokeDashoffset = String(totalLen);
+    svg.appendChild(lineEl);
+
+    const markerEls = points.map((p) => {
+      const c = document.createElementNS(svgNS, 'circle');
+      c.setAttribute('cx', p.x); c.setAttribute('cy', p.y); c.setAttribute('r', 3);
+      c.setAttribute('fill', '#ffffff'); c.setAttribute('stroke', '#09352e'); c.setAttribute('stroke-width', 1);
+      c.style.opacity = 0;
+      c.style.transition = 'opacity 0.3s ease';
+      svg.appendChild(c);
+      return c;
+    });
+
+    const trailDots = [0, 1, 2].map(() => {
+      const c = document.createElementNS(svgNS, 'circle');
+      c.setAttribute('fill', '#85c093');
+      c.style.opacity = 0;
+      svg.appendChild(c);
+      return c;
+    });
+    const cometDot = document.createElementNS(svgNS, 'circle');
+    cometDot.setAttribute('fill', '#09352e');
+    cometDot.style.opacity = 0;
+    svg.appendChild(cometDot);
+
+    body.appendChild(svg);
+
+    const xticksWrap = document.createElement('div');
+    const yticksWrap = document.createElement('div');
+    body.appendChild(xticksWrap);
+    body.appendChild(yticksWrap);
+    const tickFont = { fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: '#6c7a79', whiteSpace: 'nowrap', position: 'absolute', opacity: '0', transition: 'opacity 0.3s ease' };
+    const tickEls = [];
+    [2003, 2008, 2013, 2018, 2023, 2026].forEach((yr) => {
+      const d = document.createElement('div');
+      d.textContent = String(yr);
+      Object.assign(d.style, tickFont, { left: `${(xs(yr) / 1000) * 100}%`, top: `${(235 / 260) * 100}%`, transform: 'translate(-50%,0)' });
+      xticksWrap.appendChild(d);
+      tickEls.push(d);
+    });
+    [0, 5000, 10000, 14000].forEach((v) => {
+      const d = document.createElement('div');
+      d.textContent = v === 0 ? '0' : v.toLocaleString('en-US');
+      Object.assign(d.style, tickFont, { left: `${(x0 / 1000) * 100}%`, top: `${(ys(v) / 260) * 100}%`, transform: 'translate(-100%,-50%)', paddingRight: '6px' });
+      yticksWrap.appendChild(d);
+      tickEls.push(d);
+    });
+
+    const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const ASPECT = (x1 - x0 + 100) / (y1 - y0 + 60);
+    const FOLLOW_MS = 5200;
+    const ZOOMOUT_MS = 1800;
+    const TOTAL_MS = FOLLOW_MS + ZOOMOUT_MS;
+    const easeInOutCubic = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+    const setViewBox = (cx, cy, w, h) => svg.setAttribute('viewBox', `${(cx - w / 2).toFixed(2)} ${(cy - h / 2).toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)}`);
+
+    const showFullChart = () => {
+      setViewBox((x0 + x1) / 2, (y0 + y1) / 2 + 15, 1000, 260);
+      gridG.querySelectorAll('line').forEach((l) => { l.style.opacity = 1; });
+      tickEls.forEach((l) => { l.style.opacity = 1; });
+      lineEl.style.strokeDashoffset = '0';
+      revealRect.setAttribute('width', x1 - x0);
+      areaEl.style.opacity = 1;
+      markerEls.forEach((m) => { m.style.opacity = 1; });
+      cometDot.style.opacity = 0;
+      trailDots.forEach((t) => { t.style.opacity = 0; });
+      countEl.innerHTML = fmtCount(last.value, '2003 → 2026');
+    };
+
+    if (reduceMotion) {
+      showFullChart();
+      return;
+    }
+
+    const play = () => {
+      const startTime = performance.now();
+      const frame = (now) => {
+        const elapsed = now - startTime;
+        if (elapsed <= FOLLOW_MS) {
+          const t = Math.min(1, elapsed / FOLLOW_MS);
+          const cur = pointAtLenFraction(t);
+          lineEl.style.strokeDashoffset = String(totalLen * (1 - t));
+          areaEl.style.opacity = 1;
+          revealRect.setAttribute('width', Math.max(0, cur.x - x0));
+          points.forEach((p, i) => { if (p.x <= cur.x + 0.5) markerEls[i].style.opacity = 1; });
+          const zoomH = 55 + t * 55;
+          const zoomW = zoomH * ASPECT;
+          setViewBox(cur.x, cur.y, zoomW, zoomH);
+          cometDot.setAttribute('r', zoomH * 0.05);
+          cometDot.setAttribute('cx', cur.x); cometDot.setAttribute('cy', cur.y);
+          cometDot.style.opacity = 1;
+          trailDots.forEach((td, i) => {
+            const tt = Math.max(0, t - (i + 1) * 0.018);
+            const tp = pointAtLenFraction(tt);
+            td.setAttribute('cx', tp.x); td.setAttribute('cy', tp.y);
+            td.setAttribute('r', zoomH * 0.05 * (1 - (i + 1) * 0.25));
+            td.style.opacity = String(0.35 - i * 0.1);
+          });
+          countEl.innerHTML = fmtCount(cur.value, String(Math.round(cur.year)));
+          this._alumniRaf = requestAnimationFrame(frame);
+        } else if (elapsed <= TOTAL_MS) {
+          const zt = easeInOutCubic((elapsed - FOLLOW_MS) / ZOOMOUT_MS);
+          const startZoomH = 110, startZoomW = startZoomH * ASPECT;
+          const fullCx = (x0 + x1) / 2, fullCy = (y0 + y1) / 2 + 15;
+          const cx = last.x + (fullCx - last.x) * zt;
+          const cy = last.y + (fullCy - last.y) * zt;
+          const w = startZoomW + (1000 - startZoomW) * zt;
+          const h = startZoomH + (260 - startZoomH) * zt;
+          setViewBox(cx, cy, w, h);
+          cometDot.style.opacity = String(1 - zt);
+          trailDots.forEach((td) => { td.style.opacity = String(Math.max(0, 0.3 * (1 - zt))); });
+          gridG.querySelectorAll('line').forEach((l) => { l.style.opacity = zt; });
+          tickEls.forEach((l) => { l.style.opacity = zt; });
+          revealRect.setAttribute('width', x1 - x0);
+          countEl.innerHTML = fmtCount(last.value, '2003 → 2026');
+          this._alumniRaf = requestAnimationFrame(frame);
+        } else {
+          showFullChart();
+        }
+      };
+      setViewBox(points[0].x, points[0].y, 55 * ASPECT, 55);
+      this._alumniRaf = requestAnimationFrame(frame);
+    };
+
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          play();
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.4 });
+    io.observe(container);
+  }
+
+  // High-dimensional "embedding" style particle field: many loosely-clustered
+  // nodes scattered across the whole canvas (no single hub), evoking a
+  // t-SNE/UMAP scatter rather than a literal org chart.
+  buildEmbeddingField() {
+    const PALETTE = [
+      { fill: '#09352e', stroke: 'none', sw: 0 },          // forest ink solid
+      { fill: '#85c093', stroke: 'none', sw: 0 },          // moss solid
+      { fill: 'transparent', stroke: '#09352e', sw: 0.8 }, // hollow ink
+      { fill: '#77aa83', stroke: 'none', sw: 0 },          // muted sage
+      { fill: 'transparent', stroke: '#117025', sw: 0.9 }, // hollow pine
+      { fill: '#cad3d2', stroke: 'none', sw: 0 },          // lichen faint
+    ];
+    const particles = [];
+    const edges = [];
+
+    // Poisson-disc-ish rejection sampling for organic (non-grid) cluster centers.
+    const seeds = [];
+    const minDistF = 0.19;
+    let attempts = 0;
+    while (seeds.length < 15 && attempts < 4000) {
+      attempts++;
+      const fx = 0.04 + Math.random() * 0.92;
+      const fy = 0.08 + Math.random() * 0.84;
+      const ok = seeds.every((s) => Math.hypot((s.fx - fx) * 2.3, s.fy - fy) > minDistF);
+      if (ok) seeds.push({ fx, fy });
+    }
+
+    const clusters = seeds.map((seed, idx) => ({
+      fx: seed.fx,
+      fy: seed.fy,
+      palette: PALETTE[idx % PALETTE.length],
+      spreadF: 0.04 + Math.random() * 0.05,
+      n: 26 + Math.floor(Math.random() * 34),
+    }));
+
+    clusters.forEach((cl) => {
+      const clusterParticles = [];
+      for (let i = 0; i < cl.n; i++) {
+        const jr = Math.sqrt(Math.random()) * cl.spreadF;
+        const ja = Math.random() * Math.PI * 2;
+        const fx = cl.fx + jr * Math.cos(ja) * 1.5;
+        const fy = cl.fy + jr * Math.sin(ja);
+        const p = {
+          baseFX: fx, baseFY: fy, x: 0, y: 0, ready: false,
+          r: 1.5 + Math.random() * 1.7,
+          fill: cl.palette.fill, stroke: cl.palette.stroke, sw: cl.palette.sw,
+          phase: Math.random() * Math.PI * 2,
+          ampX: 3 + Math.random() * 5, ampY: 3 + Math.random() * 5,
+          freqX: 0.28 + Math.random() * 0.3, freqY: 0.28 + Math.random() * 0.3,
+          vx: 0, vy: 0,
+        };
+        particles.push(p);
+        clusterParticles.push(p);
+      }
+      clusterParticles.forEach((p, i) => {
+        const order = clusterParticles
+          .map((q, j) => [j === i ? Infinity : Math.hypot(p.baseFX - q.baseFX, p.baseFY - q.baseFY), j])
+          .sort((a, b) => a[0] - b[0]).slice(0, 2);
+        order.forEach(([, j]) => edges.push({ a: p, b: clusterParticles[j], stroke: '#cad3d2', width: 0.5, op: 0.38 }));
+      });
+    });
+
+    // sparse ambient noise points scattered independently of clusters
+    for (let i = 0; i < 90; i++) {
+      particles.push({
+        baseFX: 0.03 + Math.random() * 0.94,
+        baseFY: 0.06 + Math.random() * 0.88,
+        x: 0, y: 0, ready: false,
+        r: 1 + Math.random() * 1.1,
+        fill: 'transparent', stroke: '#9aa6a4', sw: 0.6,
+        phase: Math.random() * Math.PI * 2,
+        ampX: 2 + Math.random() * 3, ampY: 2 + Math.random() * 3,
+        freqX: 0.2 + Math.random() * 0.25, freqY: 0.2 + Math.random() * 0.25,
+        vx: 0, vy: 0,
+      });
+    }
+
+    // sparse long-range edges suggesting the overall manifold between clusters
+    for (let i = 0; i < 30; i++) {
+      const a = particles[Math.floor(Math.random() * particles.length)];
+      const b = particles[Math.floor(Math.random() * particles.length)];
+      if (a !== b) edges.push({ a, b, stroke: '#cad3d2', width: 0.4, op: 0.1 });
+    }
+
+    return { particles, edges };
+  }
+
+  initMultiplierCanvas(canvas) {
+    if (this._mcInited) return;
+    this._mcInited = true;
+    this._mcField = this.buildEmbeddingField();
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const resize = () => {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      this._mcSize = { w: rect.width, h: rect.height };
+    };
+    resize();
+    window.addEventListener('resize', resize);
+    this._mcResize = resize;
+
+    const mouse = { x: null, y: null, active: false };
+    const onMove = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      mouse.x = e.clientX - rect.left;
+      mouse.y = e.clientY - rect.top;
+      mouse.active = true;
+    };
+    const onLeave = () => { mouse.active = false; };
+    canvas.addEventListener('mousemove', onMove);
+    canvas.addEventListener('mouseleave', onLeave);
+    this._mcMouseCleanup = () => {
+      canvas.removeEventListener('mousemove', onMove);
+      canvas.removeEventListener('mouseleave', onLeave);
+    };
+
+    const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const SPRING = 0.055;
+    const DAMPING = 0.8;
+    const start = performance.now();
+    const draw = (now) => {
+      const t = (now - start) / 1000;
+      const { w, h } = this._mcSize;
+      const minDim = Math.min(w, h);
+      const ATTRACT_RADIUS = minDim * 0.32;
+      const ATTRACT_STRENGTH = 0.1;
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+
+      const { particles, edges } = this._mcField;
+
+      particles.forEach((p) => {
+        const driftX = reduceMotion ? 0 : Math.sin(t * p.freqX + p.phase) * p.ampX;
+        const driftY = reduceMotion ? 0 : Math.cos(t * p.freqY + p.phase) * p.ampY;
+        const targetX = p.baseFX * w + driftX;
+        const targetY = p.baseFY * h + driftY;
+
+        let ax = (targetX - p.x) * SPRING;
+        let ay = (targetY - p.y) * SPRING;
+
+        if (mouse.active && !reduceMotion) {
+          const dx = mouse.x - p.x;
+          const dy = mouse.y - p.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist < ATTRACT_RADIUS && dist > 0.01) {
+            const falloff = 1 - dist / ATTRACT_RADIUS;
+            ax += dx * falloff * falloff * ATTRACT_STRENGTH * 6;
+            ay += dy * falloff * falloff * ATTRACT_STRENGTH * 6;
+          }
+        }
+
+        p.vx = (p.vx + ax) * DAMPING;
+        p.vy = (p.vy + ay) * DAMPING;
+        if (!p.ready) { p.x = targetX; p.y = targetY; p.ready = true; }
+        p.x += p.vx;
+        p.y += p.vy;
+      });
+
+      edges.forEach((e) => {
+        ctx.beginPath();
+        ctx.moveTo(e.a.x, e.a.y);
+        ctx.lineTo(e.b.x, e.b.y);
+        ctx.strokeStyle = e.stroke;
+        ctx.globalAlpha = e.op;
+        ctx.lineWidth = e.width;
+        ctx.stroke();
+      });
+
+      ctx.globalAlpha = 1;
+      particles.forEach((p) => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        if (p.fill && p.fill !== 'transparent') { ctx.fillStyle = p.fill; ctx.fill(); }
+        if (p.sw > 0) { ctx.strokeStyle = p.stroke; ctx.lineWidth = p.sw; ctx.stroke(); }
+      });
+
+      this._mcRaf = requestAnimationFrame(draw);
+    };
+    this._mcRaf = requestAnimationFrame(draw);
+  }
+
+  componentWillUnmount() {
+    if (this._mcRaf) cancelAnimationFrame(this._mcRaf);
+    if (this._mcResize) window.removeEventListener('resize', this._mcResize);
+    if (this._mcMouseCleanup) this._mcMouseCleanup();
+    if (this._alumniRaf) cancelAnimationFrame(this._alumniRaf);
+  }
+
+  donorTiers = [
+    { range:'$1,000,000+', count:9, amount:'$16.2M' },
+    { range:'$500,000+', count:13, amount:'$8.1M' },
+    { range:'$100,000+', count:18, amount:'$3.6M' },
+    { range:'$50,000+', count:24, amount:'$1.5M' },
+    { range:'$10,000+', count:26, amount:'$480K' },
+    { range:'$1,000+', count:60, amount:'$120K' }
+  ];
+
+  navItems = [
+    { href:'#numbers', label:'By the Numbers' },
+    { href:'#vision', label:'Our Approach' },
+    { href:'#pathway', label:'College to Career' },
+    { href:'#stories', label:'Alumni Stories' },
+    { href:'#employers', label:'Employers' },
+    { href:'#ventures', label:'Entrepreneurship' },
+    { href:'#next', label:"What's Next" },
+    { href:'#giving', label:'Giving' }
+  ];
+
+  tabDefs = [
+    { key:'all', label:'All Stories' },
+    { key:'entrepreneurship', label:'Entrepreneurship' },
+    { key:'executive', label:'Executive Leadership' },
+    { key:'career', label:'Career Growth' }
+  ];
+
+  formatValue(cfg, raw) {
+    if (cfg.isStatic) return cfg.staticDisplay;
+    let n = Math.round(raw || 0);
+    let s = cfg.comma ? n.toLocaleString('en-US') : String(n);
+    return s + (cfg.suffix || '');
+  }
+
+  registerStatRef(id, el) {
+    if (!el) return;
+    this.animatedIds = this.animatedIds || new Set();
+    if (this.animatedIds.has(id)) return;
+    if (!this.io) {
+      this.io = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const sid = entry.target.getAttribute('data-stat-id');
+            if (sid && !this.animatedIds.has(sid)) {
+              this.animatedIds.add(sid);
+              this.animateStat(sid);
+            }
+            this.io.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.4 });
+    }
+    el.setAttribute('data-stat-id', id);
+    this.io.observe(el);
+  }
+
+  animateStat(id) {
+    const cfg = this.statsConfig.find(c => c.id === id);
+    if (!cfg || cfg.isStatic) return;
+    const start = performance.now();
+    const dur = 1300;
+    const tick = (now) => {
+      const p = Math.min(1, (now - start) / dur);
+      const eased = 1 - Math.pow(1 - p, 3);
+      this.setState(s => ({ counts: { ...s.counts, [id]: cfg.target * eased } }));
+      if (p < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+
+  setTab(key) { this.setState({ activeTab: key }); }
+  toggleDonor() { this.setState(s => ({ donorOpen: !s.donorOpen })); }
+
+  renderVals() {
+    const statsView = this.statsConfig.map(cfg => ({
+      id: cfg.id,
+      label: cfg.label,
+      sub: cfg.sub,
+      display: this.formatValue(cfg, this.state.counts[cfg.id]),
+      setRef: (el) => this.registerStatRef(cfg.id, el)
+    }));
+    const tabs = this.tabDefs.map(t => ({
+      key: t.key,
+      label: t.label,
+      onClick: () => this.setTab(t.key)
+    }));
+    const filteredStories = this.stories.filter(s => this.state.activeTab === 'all' || s.category === this.state.activeTab);
+    return {
+      heroHeadline: (this.props && this.props.heroHeadline) || 'Two Decades of Breaking Barriers to Economic Mobility',
+      navItems: this.navItems,
+      statsView,
+      visionPillars: this.visionPillars,
+      pipelineStats: this.pipelineStats,
+      modelColumns: this.modelColumns,
+      tabs,
+      filteredStories,
+      programLadder: this.programLadder,
+      employerPractices: this.employerPractices,
+      ventureStats: this.ventureStats,
+      nextPillars: this.nextPillars,
+      donorTiers: this.donorTiers,
+      alumniChartRef: (el) => { if (el) this.initAlumniChart(el); },
+      multiplierCanvasRef: (el) => { if (el) this.initMultiplierCanvas(el); },
+      donorOpen: this.state.donorOpen,
+      donorChevron: this.state.donorOpen ? '\u2212' : '+',
+      toggleDonor: () => this.toggleDonor()
+    };
+  }
+}
+
+</script>
+</body>
+</html>

@@ -153,7 +153,7 @@
     <div style="margin-bottom:56px">
       <canvas ref="{{ multiplierCanvasRef }}" style="width:100%;height:460px;display:block;cursor:crosshair"></canvas>
       <div style="display:flex;justify-content:center;margin-top:8px">
-        <span style="font-family:var(--cinetype);font-size:11px;letter-spacing:0.05em;color:var(--ink-soft);text-align:center;max-width:560px">Each point is a person across Organization's network — Fellows, alumni, and the connections between them. Move your cursor through the field.</span>
+        <span style="font-family:var(--cinetype);font-size:11px;letter-spacing:0.05em;color:var(--ink-soft);text-align:center;max-width:560px">Each point is a person across Organization's network, radiating out from the center. Move your cursor through the field to see it push apart.</span>
       </div>
     </div>
 
@@ -482,25 +482,44 @@ class Component extends DCLogic {
 
     body.appendChild(svg);
 
-    const xticksWrap = document.createElement('div');
-    const yticksWrap = document.createElement('div');
-    body.appendChild(xticksWrap);
-    body.appendChild(yticksWrap);
-    const tickFont = { fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: '#6c7a79', whiteSpace: 'nowrap', position: 'absolute', opacity: '0', transition: 'opacity 0.3s ease' };
+    // Tick labels live INSIDE the SVG (as native <text>, in the same viewBox
+    // coordinate space as the data) rather than as a separately-positioned
+    // HTML overlay. The overlay approach broke alignment: the SVG's
+    // preserveAspectRatio="meet" letterboxes/centers its content whenever the
+    // container's aspect ratio doesn't exactly match the viewBox's, so a
+    // plain "left: X%" div (measured against the full container width) drifts
+    // out of sync with where the data actually renders. Native <text> shares
+    // the exact same transform as the dots and lines, so it can never drift.
     const tickEls = [];
     [2003, 2008, 2013, 2018, 2023, 2026].forEach((yr) => {
-      const d = document.createElement('div');
-      d.textContent = String(yr);
-      Object.assign(d.style, tickFont, { left: `${(xs(yr) / 1000) * 100}%`, top: `${(235 / 260) * 100}%`, transform: 'translate(-50%,0)' });
-      xticksWrap.appendChild(d);
-      tickEls.push(d);
+      const t = document.createElementNS(svgNS, 'text');
+      t.textContent = String(yr);
+      t.setAttribute('x', xs(yr));
+      t.setAttribute('y', 238);
+      t.setAttribute('text-anchor', 'middle');
+      t.setAttribute('dominant-baseline', 'hanging');
+      t.setAttribute('font-family', "'JetBrains Mono', monospace");
+      t.setAttribute('font-size', '10');
+      t.setAttribute('fill', '#6c7a79');
+      t.style.opacity = 0;
+      t.style.transition = 'opacity 0.3s ease';
+      svg.appendChild(t);
+      tickEls.push(t);
     });
     [0, 5000, 10000, 14000].forEach((v) => {
-      const d = document.createElement('div');
-      d.textContent = v === 0 ? '0' : v.toLocaleString('en-US');
-      Object.assign(d.style, tickFont, { left: `${(x0 / 1000) * 100}%`, top: `${(ys(v) / 260) * 100}%`, transform: 'translate(-100%,-50%)', paddingRight: '6px' });
-      yticksWrap.appendChild(d);
-      tickEls.push(d);
+      const t = document.createElementNS(svgNS, 'text');
+      t.textContent = v === 0 ? '0' : v.toLocaleString('en-US');
+      t.setAttribute('x', x0 - 6);
+      t.setAttribute('y', ys(v));
+      t.setAttribute('text-anchor', 'end');
+      t.setAttribute('dominant-baseline', 'middle');
+      t.setAttribute('font-family', "'JetBrains Mono', monospace");
+      t.setAttribute('font-size', '10');
+      t.setAttribute('fill', '#6c7a79');
+      t.style.opacity = 0;
+      t.style.transition = 'opacity 0.3s ease';
+      svg.appendChild(t);
+      tickEls.push(t);
     });
 
     const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -590,88 +609,91 @@ class Component extends DCLogic {
     io.observe(container);
   }
 
-  // High-dimensional "embedding" style particle field: many loosely-clustered
-  // nodes scattered across the whole canvas (no single hub), evoking a
-  // t-SNE/UMAP scatter rather than a literal org chart.
-  buildEmbeddingField() {
+  // Dense field of clusters arranged in a ring around one distinct central
+  // node (Organization), connected by spokes. Cursor movement repels nearby
+  // nodes away, like a force field pushing through the network.
+  buildRadialField() {
     const PALETTE = [
-      { fill: '#09352e', stroke: 'none', sw: 0 },          // forest ink solid
       { fill: '#85c093', stroke: 'none', sw: 0 },          // moss solid
       { fill: 'transparent', stroke: '#09352e', sw: 0.8 }, // hollow ink
       { fill: '#77aa83', stroke: 'none', sw: 0 },          // muted sage
       { fill: 'transparent', stroke: '#117025', sw: 0.9 }, // hollow pine
+      { fill: '#09352e', stroke: 'none', sw: 0 },          // forest ink solid
       { fill: '#cad3d2', stroke: 'none', sw: 0 },          // lichen faint
     ];
-    const particles = [];
+    const hub = {
+      baseX: 0, baseY: 0, x: 0, y: 0, ready: false,
+      r: 10, fill: '#09352e', stroke: 'none', sw: 0,
+      phase: 0, ampX: 0, ampY: 0, freqX: 0, freqY: 0, vx: 0, vy: 0, isHub: true,
+    };
+    const particles = [hub];
     const edges = [];
+    const clusterCount = 9;
+    const R1 = 170;
 
-    // Poisson-disc-ish rejection sampling for organic (non-grid) cluster centers.
-    const seeds = [];
-    const minDistF = 0.19;
-    let attempts = 0;
-    while (seeds.length < 15 && attempts < 4000) {
-      attempts++;
-      const fx = 0.04 + Math.random() * 0.92;
-      const fy = 0.08 + Math.random() * 0.84;
-      const ok = seeds.every((s) => Math.hypot((s.fx - fx) * 2.3, s.fy - fy) > minDistF);
-      if (ok) seeds.push({ fx, fy });
-    }
-
-    const clusters = seeds.map((seed, idx) => ({
-      fx: seed.fx,
-      fy: seed.fy,
-      palette: PALETTE[idx % PALETTE.length],
-      spreadF: 0.04 + Math.random() * 0.05,
-      n: 26 + Math.floor(Math.random() * 34),
-    }));
-
-    clusters.forEach((cl) => {
+    for (let c = 0; c < clusterCount; c++) {
+      const angle = (360 / clusterCount) * c;
+      const rad = (angle * Math.PI) / 180;
+      const cx = R1 * Math.cos(rad), cy = R1 * Math.sin(rad);
+      const palette = PALETTE[c % PALETTE.length];
       const clusterParticles = [];
-      for (let i = 0; i < cl.n; i++) {
-        const jr = Math.sqrt(Math.random()) * cl.spreadF;
+      const n = 46 + Math.floor(Math.random() * 14);
+      for (let i = 0; i < n; i++) {
+        const jr = Math.sqrt(Math.random()) * 58;
         const ja = Math.random() * Math.PI * 2;
-        const fx = cl.fx + jr * Math.cos(ja) * 1.5;
-        const fy = cl.fy + jr * Math.sin(ja);
+        const bx = cx + jr * Math.cos(ja), by = cy + jr * Math.sin(ja);
         const p = {
-          baseFX: fx, baseFY: fy, x: 0, y: 0, ready: false,
-          r: 1.5 + Math.random() * 1.7,
-          fill: cl.palette.fill, stroke: cl.palette.stroke, sw: cl.palette.sw,
+          baseX: bx, baseY: by, x: 0, y: 0, ready: false,
+          r: 1.6 + Math.random() * 1.8,
+          fill: palette.fill, stroke: palette.stroke, sw: palette.sw,
           phase: Math.random() * Math.PI * 2,
-          ampX: 3 + Math.random() * 5, ampY: 3 + Math.random() * 5,
-          freqX: 0.28 + Math.random() * 0.3, freqY: 0.28 + Math.random() * 0.3,
+          ampX: 3 + Math.random() * 4, ampY: 3 + Math.random() * 4,
+          freqX: 0.35 + Math.random() * 0.3, freqY: 0.35 + Math.random() * 0.3,
           vx: 0, vy: 0,
         };
         particles.push(p);
         clusterParticles.push(p);
       }
+      clusterParticles.slice(0, 4).forEach((p) => edges.push({ a: hub, b: p, stroke: '#cad3d2', width: 1, op: 0.55 }));
       clusterParticles.forEach((p, i) => {
         const order = clusterParticles
-          .map((q, j) => [j === i ? Infinity : Math.hypot(p.baseFX - q.baseFX, p.baseFY - q.baseFY), j])
+          .map((q, j) => [j === i ? Infinity : Math.hypot(p.baseX - q.baseX, p.baseY - q.baseY), j])
           .sort((a, b) => a[0] - b[0]).slice(0, 2);
-        order.forEach(([, j]) => edges.push({ a: p, b: clusterParticles[j], stroke: '#cad3d2', width: 0.5, op: 0.38 }));
+        order.forEach(([, j]) => edges.push({ a: p, b: clusterParticles[j], stroke: '#cad3d2', width: 0.5, op: 0.4 }));
       });
-    });
 
-    // sparse ambient noise points scattered independently of clusters
-    for (let i = 0; i < 90; i++) {
-      particles.push({
-        baseFX: 0.03 + Math.random() * 0.94,
-        baseFY: 0.06 + Math.random() * 0.88,
-        x: 0, y: 0, ready: false,
-        r: 1 + Math.random() * 1.1,
-        fill: 'transparent', stroke: '#9aa6a4', sw: 0.6,
-        phase: Math.random() * Math.PI * 2,
-        ampX: 2 + Math.random() * 3, ampY: 2 + Math.random() * 3,
-        freqX: 0.2 + Math.random() * 0.25, freqY: 0.2 + Math.random() * 0.25,
-        vx: 0, vy: 0,
-      });
-    }
-
-    // sparse long-range edges suggesting the overall manifold between clusters
-    for (let i = 0; i < 30; i++) {
-      const a = particles[Math.floor(Math.random() * particles.length)];
-      const b = particles[Math.floor(Math.random() * particles.length)];
-      if (a !== b) edges.push({ a, b, stroke: '#cad3d2', width: 0.4, op: 0.1 });
+      for (let s = 0; s < 2; s++) {
+        const sAngle = angle + (s === 0 ? -15 : 15);
+        const srad = (sAngle * Math.PI) / 180;
+        const scx = (R1 + 108) * Math.cos(srad), scy = (R1 + 108) * Math.sin(srad);
+        const satParticles = [];
+        const sn = 24 + Math.floor(Math.random() * 10);
+        for (let k = 0; k < sn; k++) {
+          const jr = Math.sqrt(Math.random()) * 40;
+          const ja = Math.random() * Math.PI * 2;
+          const bx = scx + jr * Math.cos(ja), by = scy + jr * Math.sin(ja);
+          const p = {
+            baseX: bx, baseY: by, x: 0, y: 0, ready: false,
+            r: 1.3 + Math.random() * 1.2,
+            fill: 'transparent', stroke: '#9aa6a4', sw: 0.65,
+            phase: Math.random() * Math.PI * 2,
+            ampX: 2 + Math.random() * 3, ampY: 2 + Math.random() * 3,
+            freqX: 0.25 + Math.random() * 0.3, freqY: 0.25 + Math.random() * 0.3,
+            vx: 0, vy: 0,
+          };
+          particles.push(p);
+          satParticles.push(p);
+        }
+        let nearest = null, nd = Infinity;
+        clusterParticles.forEach((q) => { const d = Math.hypot(scx - q.baseX, scy - q.baseY); if (d < nd) { nd = d; nearest = q; } });
+        satParticles.slice(0, 2).forEach((p) => edges.push({ a: nearest, b: p, stroke: '#e5e5e5', width: 0.5, op: 0.3 }));
+        satParticles.forEach((p, i) => {
+          const order = satParticles
+            .map((q, j) => [j === i ? Infinity : Math.hypot(p.baseX - q.baseX, p.baseY - q.baseY), j])
+            .sort((a, b) => a[0] - b[0]).slice(0, 2);
+          order.forEach(([, j]) => edges.push({ a: p, b: satParticles[j], stroke: '#e5e5e5', width: 0.4, op: 0.25 }));
+        });
+      }
     }
 
     return { particles, edges };
@@ -680,7 +702,7 @@ class Component extends DCLogic {
   initMultiplierCanvas(canvas) {
     if (this._mcInited) return;
     this._mcInited = true;
-    this._mcField = this.buildEmbeddingField();
+    this._mcField = this.buildRadialField();
     const ctx = canvas.getContext('2d');
     const dpr = window.devicePixelRatio || 1;
     const resize = () => {
@@ -711,36 +733,42 @@ class Component extends DCLogic {
     const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const SPRING = 0.055;
     const DAMPING = 0.8;
+    const REPEL_RADIUS = 130;
+    const REPEL_STRENGTH = 0.9;
     const start = performance.now();
     const draw = (now) => {
       const t = (now - start) / 1000;
       const { w, h } = this._mcSize;
-      const minDim = Math.min(w, h);
-      const ATTRACT_RADIUS = minDim * 0.32;
-      const ATTRACT_STRENGTH = 0.1;
+      const scale = Math.min(w, h) / 600;
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, w, h);
+
+      let mAX = null, mAY = null;
+      if (mouse.active) {
+        mAX = (mouse.x - w / 2) / scale;
+        mAY = (mouse.y - h / 2) / scale;
+      }
 
       const { particles, edges } = this._mcField;
 
       particles.forEach((p) => {
         const driftX = reduceMotion ? 0 : Math.sin(t * p.freqX + p.phase) * p.ampX;
         const driftY = reduceMotion ? 0 : Math.cos(t * p.freqY + p.phase) * p.ampY;
-        const targetX = p.baseFX * w + driftX;
-        const targetY = p.baseFY * h + driftY;
+        const targetX = p.baseX + driftX;
+        const targetY = p.baseY + driftY;
 
         let ax = (targetX - p.x) * SPRING;
         let ay = (targetY - p.y) * SPRING;
 
         if (mouse.active && !reduceMotion) {
-          const dx = mouse.x - p.x;
-          const dy = mouse.y - p.y;
+          const dx = p.x - mAX;
+          const dy = p.y - mAY;
           const dist = Math.hypot(dx, dy);
-          if (dist < ATTRACT_RADIUS && dist > 0.01) {
-            const falloff = 1 - dist / ATTRACT_RADIUS;
-            ax += dx * falloff * falloff * ATTRACT_STRENGTH * 6;
-            ay += dy * falloff * falloff * ATTRACT_STRENGTH * 6;
+          if (dist < REPEL_RADIUS && dist > 0.01) {
+            const falloff = 1 - dist / REPEL_RADIUS;
+            ax += (dx / dist) * falloff * falloff * REPEL_STRENGTH;
+            ay += (dy / dist) * falloff * falloff * REPEL_STRENGTH;
           }
         }
 
@@ -750,6 +778,10 @@ class Component extends DCLogic {
         p.x += p.vx;
         p.y += p.vy;
       });
+
+      ctx.save();
+      ctx.translate(w / 2, h / 2);
+      ctx.scale(scale, scale);
 
       edges.forEach((e) => {
         ctx.beginPath();
@@ -769,6 +801,7 @@ class Component extends DCLogic {
         if (p.sw > 0) { ctx.strokeStyle = p.stroke; ctx.lineWidth = p.sw; ctx.stroke(); }
       });
 
+      ctx.restore();
       this._mcRaf = requestAnimationFrame(draw);
     };
     this._mcRaf = requestAnimationFrame(draw);

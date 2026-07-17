@@ -221,49 +221,15 @@
     var defs = svg.append('defs');
     var haloFilter = defs.append('filter').attr('id', 'networkHaloGlow').attr('x', '-300%').attr('y', '-300%').attr('width', '700%').attr('height', '700%');
     haloFilter.append('feGaussianBlur').attr('stdDeviation', 3);
-    var trailFilter = defs.append('filter').attr('id', 'networkTrailGlow').attr('x', '-300%').attr('y', '-300%').attr('width', '700%').attr('height', '700%');
-    trailFilter.append('feGaussianBlur').attr('stdDeviation', 5);
+
+    // Dense, fixed-pixel-spacing vertical rules behind everything — a
+    // decorative "ruled notebook paper" texture, static regardless of the
+    // camera's pan/zoom. Matches the same treatment on the Alumni chart.
+    var gridG = svg.append('g').attr('class', 'network-grid');
 
     var camera = svg.append('g').attr('class', 'network-camera');
     var linksG = camera.append('g').attr('class', 'network-links');
     var nodesG = camera.append('g').attr('class', 'network-nodes');
-
-    // Cursor-trail glow: a soft blue comet that follows the pointer across
-    // the whole canvas, independent of the camera's pan/zoom (it lives in
-    // raw screen/viewBox coordinates, not the zoomed `camera` group).
-    var TRAIL_LEN = 6;
-    var trailHistory = [];
-    var trailG = svg.append('g').attr('class', 'network-trail').style('opacity', 0);
-    var trailPath = trailG.append('path')
-      .attr('fill', 'none').attr('stroke', 'rgba(120,190,255,0.55)')
-      .attr('stroke-width', 8).attr('stroke-linecap', 'round')
-      .attr('filter', 'url(#networkTrailGlow)');
-    var trailDots = d3.range(TRAIL_LEN).map(function (i) {
-      return trailG.append('circle')
-        .attr('r', 5 - i * 0.6)
-        .attr('fill', 'rgba(140,200,255,' + (0.75 - i * 0.11).toFixed(2) + ')')
-        .style('opacity', 0);
-    });
-    var trailLine = d3.line().x(function (p) { return p.x; }).y(function (p) { return p.y; }).curve(d3.curveBasis);
-
-    if (!reduceMotion) {
-      svgEl.addEventListener('mousemove', function (e) {
-        var rect = svgEl.getBoundingClientRect();
-        trailHistory.unshift({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-        if (trailHistory.length > TRAIL_LEN) trailHistory.length = TRAIL_LEN;
-        trailG.style('opacity', 1);
-        trailPath.attr('d', trailHistory.length > 1 ? trailLine(trailHistory) : null);
-        trailDots.forEach(function (dotSel, i) {
-          var p = trailHistory[i];
-          if (p) dotSel.attr('cx', p.x).attr('cy', p.y).style('opacity', 1);
-          else dotSel.style('opacity', 0);
-        });
-      });
-      svgEl.addEventListener('mouseleave', function () {
-        trailG.transition().duration(400).style('opacity', 0);
-        trailHistory = [];
-      });
-    }
 
     var nodeById = {};
     networkData.nodes.forEach(function (n) { nodeById[n.id] = n; });
@@ -297,6 +263,18 @@
       var rect = svgEl.getBoundingClientRect();
       W = rect.width; H = rect.height;
       svgEl.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+
+      gridG.selectAll('line').remove();
+      gridG.selectAll('line')
+        .data(d3.range(0, W, 18))
+        .join('line')
+        .attr('x1', function (x) { return x; })
+        .attr('x2', function (x) { return x; })
+        .attr('y1', 0)
+        .attr('y2', H)
+        .attr('stroke', 'rgba(10,42,28,0.18)')
+        .attr('stroke-width', 1)
+        .attr('stroke-dasharray', '1.5 4');
     }
     resize();
     window.addEventListener('resize', resize);
@@ -527,18 +505,23 @@
       glowPath.attr('d', lineGen(points));
       linePath.attr('d', lineGen(points));
 
+      // Dense, fixed-pixel-spacing vertical rules — a decorative "ruled
+      // notebook paper" texture behind the chart, independent of the year
+      // scale (unlike the tick years below, which still map to real dates).
       gridG.selectAll('line').remove();
-      var gridYears = d3.range(alumniData[0].year, last.year + 1);
+      var gridPositions = d3.range(0, W, 18);
       gridG.selectAll('line')
-        .data(gridYears)
+        .data(gridPositions)
         .join('line')
-        .attr('x1', function (yr) { return xScale(yr); })
-        .attr('x2', function (yr) { return xScale(yr); })
-        .attr('y1', margin.top - 10)
-        .attr('y2', H - margin.bottom + 10)
-        .attr('stroke', 'rgba(10,42,28,0.22)')
+        .attr('x1', function (x) { return x; })
+        .attr('x2', function (x) { return x; })
+        .attr('y1', 0)
+        .attr('y2', H)
+        .attr('stroke', 'rgba(10,42,28,0.18)')
         .attr('stroke-width', 1)
         .attr('stroke-dasharray', '1.5 4');
+
+      var gridYears = d3.range(alumniData[0].year, last.year + 1);
 
       dotsG.selectAll('g.dot').remove();
       var dotSel = dotsG.selectAll('g.dot').data(points).join('g')

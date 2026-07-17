@@ -1,6 +1,39 @@
 (function () {
   'use strict';
 
+  // -----------------------------------------------------------------------
+  // EDIT ME: year-by-year alumni counts for the "Alumni Network Growth"
+  // visualization in the What's Next section. Add/remove/change rows freely
+  // — the chart's scales, ticks, and animation timing all derive from this.
+  // -----------------------------------------------------------------------
+  const alumniData = [
+    { year: 2002, value: 0 },
+    { year: 2003, value: 42 },
+    { year: 2004, value: 112 },
+    { year: 2005, value: 248 },
+    { year: 2006, value: 430 },
+    { year: 2007, value: 660 },
+    { year: 2008, value: 1014 },
+    { year: 2009, value: 1426 },
+    { year: 2010, value: 1918 },
+    { year: 2011, value: 2373 },
+    { year: 2012, value: 2852 },
+    { year: 2013, value: 3367 },
+    { year: 2014, value: 3819 },
+    { year: 2015, value: 4490 },
+    { year: 2016, value: 5245 },
+    { year: 2017, value: 6076 },
+    { year: 2018, value: 7019 },
+    { year: 2019, value: 7863 },
+    { year: 2020, value: 8426 },
+    { year: 2021, value: 9303 },
+    { year: 2022, value: 10348 },
+    { year: 2023, value: 11494 },
+    { year: 2024, value: 12734 },
+    { year: 2025, value: 14215 },
+    { year: 2026, value: 16016 },
+  ];
+
   /* ---------- Stat counters ---------- */
   function formatStat(card, raw) {
     if (card.dataset.static) return card.dataset.static;
@@ -262,252 +295,241 @@
     requestAnimationFrame(draw);
   }
 
-  /* ---------- Alumni Network Growth: zoom-and-follow chart ---------- */
-  // Builds a zoomed-in "camera" animation that follows the ascending line from
-  // 2003 as it climbs, then pulls back at the end to reveal the full
-  // 2003->2026 trend.
-  var ALUMNI_DATA = [
-    { year: 2003, value: 20 }, { year: 2005, value: 150 }, { year: 2007, value: 420 },
-    { year: 2009, value: 900 }, { year: 2011, value: 1600 }, { year: 2013, value: 2500 },
-    { year: 2015, value: 3700 }, { year: 2017, value: 5100 }, { year: 2019, value: 6900 },
-    { year: 2021, value: 8800 }, { year: 2023, value: 10800 }, { year: 2024, value: 11700 },
-    { year: 2025, value: 12600 }, { year: 2026, value: 13500 }
-  ];
-
+  /* ---------- Alumni Network Growth: cinematic zoom-and-follow chart ---------- */
+  // D3-driven. Camera starts tight on the earliest point, follows the curve
+  // upward at constant apparent speed (arc-length parameterized), then pulls
+  // back dramatically to reveal the full trend and a closing annotation.
+  //
+  // Built with a <g class="camera-layer"> that gets a translate+scale
+  // transform each frame (the standard d3-zoom transform formula) rather
+  // than manipulating the SVG's viewBox directly — this keeps every element
+  // (dots, glow trail, axis ticks) living in one shared coordinate space, so
+  // nothing can drift out of alignment the way an HTML tick overlay can.
   function initAlumniChart(container) {
-    var x0 = 50, x1 = 980, y0 = 20, y1 = 210;
-    var yearMin = 2003, yearMax = 2026, valMax = 14000;
-    function xs(year) { return x0 + ((year - yearMin) / (yearMax - yearMin)) * (x1 - x0); }
-    function ys(val) { return y1 - (val / valMax) * (y1 - y0); }
-    var points = ALUMNI_DATA.map(function (d) { return { x: xs(d.year), y: ys(d.value), year: d.year, value: d.value }; });
-    var last = points[points.length - 1];
+    if (typeof d3 === 'undefined') return;
 
-    var segLens = [];
-    var totalLen = 0;
-    for (var i = 1; i < points.length; i++) {
-      var l = Math.hypot(points[i].x - points[i - 1].x, points[i].y - points[i - 1].y);
-      segLens.push(l);
-      totalLen += l;
+    var svgEl = document.getElementById('alumni-svg');
+    var svg = d3.select(svgEl);
+    var liveWrap = document.getElementById('alumni-live');
+    var liveYear = document.getElementById('alumni-live-year');
+    var liveCount = document.getElementById('alumni-live-count');
+    var finalWrap = document.getElementById('alumni-final');
+    var finalNum = document.getElementById('alumni-final-num');
+    var replayBtn = document.getElementById('alumni-replay');
+    if (!svgEl) return;
+
+    var last = alumniData[alumniData.length - 1];
+    var margin = { top: 30, right: 34, bottom: 40, left: 56 };
+
+    var xScale = d3.scaleLinear().domain(d3.extent(alumniData, function (d) { return d.year; }));
+    var yScale = d3.scaleLinear().domain([0, last.value * 1.08]);
+
+    var defs = svg.append('defs');
+    var glowFilter = defs.append('filter').attr('id', 'alumniGlow').attr('x', '-200%').attr('y', '-200%').attr('width', '500%').attr('height', '500%');
+    var glowBlur = glowFilter.append('feGaussianBlur').attr('stdDeviation', 6);
+    var dotGlowFilter = defs.append('filter').attr('id', 'alumniDotGlow').attr('x', '-400%').attr('y', '-400%').attr('width', '900%').attr('height', '900%');
+    var dotBlur = dotGlowFilter.append('feGaussianBlur').attr('stdDeviation', 4);
+
+    var gridG = svg.append('g').attr('class', 'grid-layer');
+    var camera = svg.append('g').attr('class', 'camera-layer');
+    var glowPath = camera.append('path').attr('fill', 'none').attr('stroke', 'rgba(130,190,255,0.75)').attr('filter', 'url(#alumniGlow)').attr('stroke-linecap', 'round');
+    var linePath = camera.append('path').attr('fill', 'none').attr('stroke', '#0a2a1c').attr('stroke-linecap', 'round').attr('vector-effect', 'non-scaling-stroke');
+    var dotsG = camera.append('g').attr('class', 'dots-layer');
+    var axisXG = camera.append('g').attr('class', 'axis-x').style('opacity', 0);
+    var axisYG = camera.append('g').attr('class', 'axis-y').style('opacity', 0);
+
+    var W = 0, H = 0, points = [], segLens = [], totalLen = 0;
+
+    function layout() {
+      // Measure the <svg> itself, not the outer panel — the panel's flex
+      // layout gives the top bar/caption their own space first, so the
+      // SVG's real rendered box is shorter than the panel. Sizing off the
+      // panel instead left the bottom of the chart (the x-axis) positioned
+      // outside the SVG's actual box, where it silently gets clipped.
+      var rect = svgEl.getBoundingClientRect();
+      W = rect.width;
+      H = rect.height;
+      svgEl.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+      xScale.range([margin.left, W - margin.right]);
+      yScale.range([H - margin.bottom, margin.top]);
+
+      points = alumniData.map(function (d) { return { x: xScale(d.year), y: yScale(d.value), year: d.year, value: d.value }; });
+      segLens = [];
+      totalLen = 0;
+      for (var i = 1; i < points.length; i++) {
+        var l = Math.hypot(points[i].x - points[i - 1].x, points[i].y - points[i - 1].y);
+        segLens.push(l);
+        totalLen += l;
+      }
+
+      var lineGen = d3.line().x(function (p) { return p.x; }).y(function (p) { return p.y; }).curve(d3.curveMonotoneX);
+      glowPath.attr('d', lineGen(points));
+      linePath.attr('d', lineGen(points));
+
+      gridG.selectAll('line').remove();
+      var gridYears = d3.range(alumniData[0].year, last.year + 1);
+      gridG.selectAll('line')
+        .data(gridYears)
+        .join('line')
+        .attr('x1', function (yr) { return xScale(yr); })
+        .attr('x2', function (yr) { return xScale(yr); })
+        .attr('y1', margin.top - 10)
+        .attr('y2', H - margin.bottom + 10)
+        .attr('stroke', 'rgba(10,42,28,0.22)')
+        .attr('stroke-width', 1)
+        .attr('stroke-dasharray', '1.5 4');
+
+      dotsG.selectAll('g.dot').remove();
+      var dotSel = dotsG.selectAll('g.dot').data(points).join('g')
+        .attr('class', 'dot')
+        .attr('transform', function (p) { return 'translate(' + p.x + ',' + p.y + ')'; })
+        .style('opacity', 0);
+      dotSel.append('circle').attr('class', 'dot-halo').attr('r', 6).attr('fill', 'rgba(140,200,255,0.55)').attr('filter', 'url(#alumniDotGlow)');
+      dotSel.append('circle').attr('class', 'dot-core').attr('r', 3.4).attr('fill', '#eefbf1').attr('stroke', '#0a2a1c').attr('stroke-width', 0.75).attr('vector-effect', 'non-scaling-stroke');
+
+      var tickYears = gridYears.filter(function (yr) { return yr % 4 === 0 || yr === last.year || yr === alumniData[0].year; });
+      axisXG.attr('transform', 'translate(0,' + (H - margin.bottom) + ')')
+        .call(d3.axisBottom(xScale).tickValues(tickYears).tickFormat(d3.format('d')).tickSizeOuter(0));
+      axisYG.attr('transform', 'translate(' + margin.left + ',0)')
+        .call(d3.axisLeft(yScale).ticks(5).tickFormat(d3.format(',')).tickSizeOuter(0));
+      [axisXG, axisYG].forEach(function (g) {
+        g.selectAll('text').attr('fill', 'rgba(10,42,28,0.75)').attr('font-family', "'JetBrains Mono', monospace").attr('font-size', 10);
+        g.selectAll('path,line').attr('stroke', 'rgba(10,42,28,0.35)');
+      });
     }
-    // arc-length parameterization so the "camera" travels at constant speed
+    layout();
+    window.addEventListener('resize', layout);
+
     function pointAtLenFraction(t) {
       var target = t * totalLen;
       var acc = 0;
-      for (var j = 0; j < segLens.length; j++) {
-        if (acc + segLens[j] >= target || j === segLens.length - 1) {
-          var segT = segLens[j] > 0 ? (target - acc) / segLens[j] : 0;
-          var a = points[j], b = points[j + 1];
+      for (var i = 0; i < segLens.length; i++) {
+        if (acc + segLens[i] >= target || i === segLens.length - 1) {
+          var segT = segLens[i] > 0 ? (target - acc) / segLens[i] : 0;
+          var a = points[i], b = points[i + 1];
           var ct = Math.max(0, Math.min(1, segT));
           return {
             x: a.x + (b.x - a.x) * ct, y: a.y + (b.y - a.y) * ct,
             value: a.value + (b.value - a.value) * ct, year: a.year + (b.year - a.year) * ct,
           };
         }
-        acc += segLens[j];
+        acc += segLens[i];
       }
-      return last;
+      return points[points.length - 1];
     }
 
-    var linePathD = points.map(function (p, i) { return (i === 0 ? 'M' : 'L') + p.x.toFixed(1) + ',' + p.y.toFixed(1); }).join(' ');
-    var areaPathD = 'M' + points[0].x.toFixed(1) + ',' + y1 + ' ' +
-      points.map(function (p) { return 'L' + p.x.toFixed(1) + ',' + p.y.toFixed(1); }).join(' ') +
-      ' L' + points[points.length - 1].x.toFixed(1) + ',' + y1 + ' Z';
+    function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
-    var svgNS = 'http://www.w3.org/2000/svg';
-    var body = container.querySelector('.alumni-chart-body');
-    var countEl = container.querySelector('.alumni-chart-count');
-    function fmtCount(n, label) {
-      return Math.round(n).toLocaleString('en-US') + ' <span class="alumni-count-unit">alumni · ' + label + '</span>';
+    // Everything inside `camera` lives in a group scaled by k, so any raw
+    // stroke-width / radius / filter stdDeviation set on those children gets
+    // multiplied by k again at render time (filters especially: stdDeviation
+    // is interpreted in the *already-scaled* local coordinate system). To
+    // keep the glow, dots, and blur radius a deliberate, consistent size on
+    // screen regardless of zoom, each is computed as "desired on-screen
+    // size / k" every frame — the group's scale(k) then cancels back out.
+    function setCamera(px, py, k) {
+      var tx = W / 2 - k * px;
+      var ty = H / 2 - k * py;
+      camera.attr('transform', 'translate(' + tx + ',' + ty + ') scale(' + k + ')');
+      glowPath.attr('stroke-width', clamp(12 / k, 0.3, 60));
+      linePath.attr('stroke-width', 2.4); // also enforced by vector-effect:non-scaling-stroke
+      glowBlur.attr('stdDeviation', clamp(5 / k, 0.15, 20));
+      dotsG.selectAll('g.dot circle.dot-core').attr('r', clamp(3.4 / k, 0.3, 12));
+      dotsG.selectAll('g.dot circle.dot-halo').attr('r', clamp(9 / k, 0.5, 30));
+      dotBlur.attr('stdDeviation', clamp(3.5 / k, 0.1, 14));
     }
-
-    var svg = document.createElementNS(svgNS, 'svg');
-    svg.setAttribute('viewBox', '0 0 1000 260');
-    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-    svg.style.width = '100%';
-    svg.style.height = '240px';
-    svg.style.display = 'block';
-    svg.style.overflow = 'visible';
-
-    var defs = document.createElementNS(svgNS, 'defs');
-    var clipPathEl = document.createElementNS(svgNS, 'clipPath');
-    var clipId = 'alumniRevealClip-' + Math.random().toString(36).slice(2, 9);
-    clipPathEl.setAttribute('id', clipId);
-    clipPathEl.setAttribute('clipPathUnits', 'userSpaceOnUse');
-    var revealRect = document.createElementNS(svgNS, 'rect');
-    revealRect.setAttribute('x', x0); revealRect.setAttribute('y', 0);
-    revealRect.setAttribute('width', 0); revealRect.setAttribute('height', 260);
-    clipPathEl.appendChild(revealRect);
-    defs.appendChild(clipPathEl);
-    svg.appendChild(defs);
-
-    var gridG = document.createElementNS(svgNS, 'g');
-    [0, 5000, 10000, 14000].forEach(function (v) {
-      var line = document.createElementNS(svgNS, 'line');
-      line.setAttribute('x1', x0); line.setAttribute('x2', x1);
-      line.setAttribute('y1', ys(v)); line.setAttribute('y2', ys(v));
-      line.setAttribute('stroke', '#cad3d2'); line.setAttribute('stroke-width', 0.5);
-      line.setAttribute('stroke-dasharray', '2 3');
-      line.style.opacity = 0;
-      gridG.appendChild(line);
-    });
-    svg.appendChild(gridG);
-
-    var areaEl = document.createElementNS(svgNS, 'path');
-    areaEl.setAttribute('d', areaPathD);
-    areaEl.setAttribute('fill', '#77aa83');
-    areaEl.setAttribute('clip-path', 'url(#' + clipId + ')');
-    areaEl.style.opacity = 0;
-    svg.appendChild(areaEl);
-
-    var lineEl = document.createElementNS(svgNS, 'path');
-    lineEl.setAttribute('d', linePathD);
-    lineEl.setAttribute('fill', 'none');
-    lineEl.setAttribute('stroke', '#09352e');
-    lineEl.setAttribute('stroke-width', 1.5);
-    lineEl.style.strokeDasharray = String(totalLen);
-    lineEl.style.strokeDashoffset = String(totalLen);
-    svg.appendChild(lineEl);
-
-    var markerEls = points.map(function (p) {
-      var c = document.createElementNS(svgNS, 'circle');
-      c.setAttribute('cx', p.x); c.setAttribute('cy', p.y); c.setAttribute('r', 3);
-      c.setAttribute('fill', '#ffffff'); c.setAttribute('stroke', '#09352e'); c.setAttribute('stroke-width', 1);
-      c.style.opacity = 0;
-      c.style.transition = 'opacity 0.3s ease';
-      svg.appendChild(c);
-      return c;
-    });
-
-    var trailDots = [0, 1, 2].map(function () {
-      var c = document.createElementNS(svgNS, 'circle');
-      c.setAttribute('fill', '#85c093');
-      c.style.opacity = 0;
-      svg.appendChild(c);
-      return c;
-    });
-    var cometDot = document.createElementNS(svgNS, 'circle');
-    cometDot.setAttribute('fill', '#09352e');
-    cometDot.style.opacity = 0;
-    svg.appendChild(cometDot);
-
-    body.appendChild(svg);
-
-    // Tick labels live INSIDE the SVG (as native <text>, in the same viewBox
-    // coordinate space as the data) rather than as a separately-positioned
-    // HTML overlay. The overlay approach broke alignment: the SVG's
-    // preserveAspectRatio="meet" letterboxes/centers its content whenever the
-    // container's aspect ratio doesn't exactly match the viewBox's, so a
-    // plain "left: X%" div (measured against the full container width) drifts
-    // out of sync with where the data actually renders. Native <text> shares
-    // the exact same transform as the dots and lines, so it can never drift.
-    var tickEls = [];
-    [2003, 2008, 2013, 2018, 2023, 2026].forEach(function (yr) {
-      var t = document.createElementNS(svgNS, 'text');
-      t.textContent = String(yr);
-      t.setAttribute('x', xs(yr));
-      t.setAttribute('y', 238);
-      t.setAttribute('text-anchor', 'middle');
-      t.setAttribute('dominant-baseline', 'hanging');
-      t.setAttribute('font-family', "'JetBrains Mono', monospace");
-      t.setAttribute('font-size', '10');
-      t.setAttribute('fill', '#6c7a79');
-      t.style.opacity = 0;
-      t.style.transition = 'opacity 0.3s ease';
-      svg.appendChild(t);
-      tickEls.push(t);
-    });
-    [0, 5000, 10000, 14000].forEach(function (v) {
-      var t = document.createElementNS(svgNS, 'text');
-      t.textContent = v === 0 ? '0' : v.toLocaleString('en-US');
-      t.setAttribute('x', x0 - 6);
-      t.setAttribute('y', ys(v));
-      t.setAttribute('text-anchor', 'end');
-      t.setAttribute('dominant-baseline', 'middle');
-      t.setAttribute('font-family', "'JetBrains Mono', monospace");
-      t.setAttribute('font-size', '10');
-      t.setAttribute('fill', '#6c7a79');
-      t.style.opacity = 0;
-      t.style.transition = 'opacity 0.3s ease';
-      svg.appendChild(t);
-      tickEls.push(t);
-    });
 
     var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var ASPECT = (x1 - x0 + 100) / (y1 - y0 + 60);
-    var FOLLOW_MS = 5200;
-    var ZOOMOUT_MS = 1800;
+    var FOLLOW_MS = 9000;
+    var ZOOMOUT_MS = 2200;
     var TOTAL_MS = FOLLOW_MS + ZOOMOUT_MS;
-    function easeInOutCubic(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
-    function setViewBox(cx, cy, w, h) {
-      svg.setAttribute('viewBox', (cx - w / 2).toFixed(2) + ' ' + (cy - h / 2).toFixed(2) + ' ' + w.toFixed(2) + ' ' + h.toFixed(2));
-    }
+    var K_START = 15;
+    var K_FOLLOW_END = 4.2;
 
-    function showFullChart() {
-      setViewBox((x0 + x1) / 2, (y0 + y1) / 2 + 15, 1000, 260);
-      gridG.querySelectorAll('line').forEach(function (l) { l.style.opacity = 1; });
-      tickEls.forEach(function (l) { l.style.opacity = 1; });
-      lineEl.style.strokeDashoffset = '0';
-      revealRect.setAttribute('width', x1 - x0);
-      areaEl.style.opacity = 1;
-      markerEls.forEach(function (m) { m.style.opacity = 1; });
-      cometDot.style.opacity = 0;
-      trailDots.forEach(function (t) { t.style.opacity = 0; });
-      countEl.innerHTML = fmtCount(last.value, '2003 → 2026');
-    }
+    function easeOutExpo(t) { return t === 1 ? 1 : 1 - Math.pow(2, -10 * t); }
 
-    if (reduceMotion) {
-      showFullChart();
-      return;
+    function showFullView() {
+      setCamera((xScale.range()[0] + xScale.range()[1]) / 2, (yScale.range()[0] + yScale.range()[1]) / 2, 1);
+      dotsG.selectAll('g.dot').style('opacity', 1);
+      axisXG.transition().duration(400).style('opacity', 1);
+      axisYG.transition().duration(400).style('opacity', 1);
+      liveWrap.classList.remove('is-visible');
+      finalNum.textContent = last.value.toLocaleString('en-US');
+      finalWrap.classList.add('is-visible');
     }
 
     var rafId = null;
+    var revealedCount = 0;
+
+    function revealDotsUpTo(curX) {
+      points.forEach(function (p, i) {
+        if (p.x <= curX + 0.5 && i >= revealedCount - 1) {
+          var el = dotsG.selectAll('g.dot').filter(function (d, j) { return j === i; });
+          if (+el.style('opacity') !== 1) {
+            el.style('opacity', 1);
+            revealedCount = Math.max(revealedCount, i + 1);
+          }
+        }
+      });
+    }
+
     function play() {
+      revealedCount = 0;
+      dotsG.selectAll('g.dot').style('opacity', 0);
+      axisXG.style('opacity', 0);
+      axisYG.style('opacity', 0);
+      finalWrap.classList.remove('is-visible');
+      liveWrap.classList.add('is-visible');
+      glowPath.attr('stroke-dasharray', totalLen).attr('stroke-dashoffset', totalLen);
+      linePath.attr('stroke-dasharray', totalLen).attr('stroke-dashoffset', totalLen);
+
+      if (reduceMotion) {
+        glowPath.attr('stroke-dashoffset', 0);
+        linePath.attr('stroke-dashoffset', 0);
+        showFullView();
+        return;
+      }
+
       var startTime = performance.now();
       function frame(now) {
-        var elapsed = now - startTime;
+        // rAF's timestamp can occasionally precede a performance.now() taken
+        // just before scheduling it — clamp so elapsed never goes negative
+        // on the first frame (which would otherwise feed a later Math.sqrt()
+        // a negative number and NaN the whole camera transform).
+        var elapsed = Math.max(0, now - startTime);
         if (elapsed <= FOLLOW_MS) {
           var t = Math.min(1, elapsed / FOLLOW_MS);
           var cur = pointAtLenFraction(t);
-          lineEl.style.strokeDashoffset = String(totalLen * (1 - t));
-          areaEl.style.opacity = 1;
-          revealRect.setAttribute('width', Math.max(0, cur.x - x0));
-          points.forEach(function (p, idx) { if (p.x <= cur.x + 0.5) markerEls[idx].style.opacity = 1; });
-          var zoomH = 55 + t * 55;
-          var zoomW = zoomH * ASPECT;
-          setViewBox(cur.x, cur.y, zoomW, zoomH);
-          cometDot.setAttribute('r', zoomH * 0.05);
-          cometDot.setAttribute('cx', cur.x); cometDot.setAttribute('cy', cur.y);
-          cometDot.style.opacity = 1;
-          trailDots.forEach(function (td, idx) {
-            var tt = Math.max(0, t - (idx + 1) * 0.018);
-            var tp = pointAtLenFraction(tt);
-            td.setAttribute('cx', tp.x); td.setAttribute('cy', tp.y);
-            td.setAttribute('r', zoomH * 0.05 * (1 - (idx + 1) * 0.25));
-            td.style.opacity = String(0.35 - idx * 0.1);
-          });
-          countEl.innerHTML = fmtCount(cur.value, String(Math.round(cur.year)));
+          var k = K_START + (K_FOLLOW_END - K_START) * Math.sqrt(t);
+          setCamera(cur.x, cur.y, k);
+          glowPath.attr('stroke-dashoffset', totalLen * (1 - t));
+          linePath.attr('stroke-dashoffset', totalLen * (1 - t));
+          revealDotsUpTo(cur.x);
+          liveYear.textContent = String(Math.round(cur.year));
+          liveCount.textContent = Math.round(cur.value).toLocaleString('en-US') + ' alumni';
           rafId = requestAnimationFrame(frame);
         } else if (elapsed <= TOTAL_MS) {
-          var zt = easeInOutCubic((elapsed - FOLLOW_MS) / ZOOMOUT_MS);
-          var startZoomH = 110, startZoomW = startZoomH * ASPECT;
-          var fullCx = (x0 + x1) / 2, fullCy = (y0 + y1) / 2 + 15;
-          var cx = last.x + (fullCx - last.x) * zt;
-          var cy = last.y + (fullCy - last.y) * zt;
-          var w = startZoomW + (1000 - startZoomW) * zt;
-          var h = startZoomH + (260 - startZoomH) * zt;
-          setViewBox(cx, cy, w, h);
-          cometDot.style.opacity = String(1 - zt);
-          trailDots.forEach(function (td) { td.style.opacity = String(Math.max(0, 0.3 * (1 - zt))); });
-          gridG.querySelectorAll('line').forEach(function (l) { l.style.opacity = zt; });
-          tickEls.forEach(function (l) { l.style.opacity = zt; });
-          revealRect.setAttribute('width', x1 - x0);
-          countEl.innerHTML = fmtCount(last.value, '2003 → 2026');
+          var zt = easeOutExpo((elapsed - FOLLOW_MS) / ZOOMOUT_MS);
+          var lastPt = points[points.length - 1];
+          var fullCx = (xScale.range()[0] + xScale.range()[1]) / 2;
+          var fullCy = (yScale.range()[0] + yScale.range()[1]) / 2;
+          var cx = lastPt.x + (fullCx - lastPt.x) * zt;
+          var cy = lastPt.y + (fullCy - lastPt.y) * zt;
+          var k2 = K_FOLLOW_END + (1 - K_FOLLOW_END) * zt;
+          setCamera(cx, cy, k2);
+          dotsG.selectAll('g.dot').style('opacity', 1);
+          if (zt > 0.6) {
+            var axisOp = (zt - 0.6) / 0.4;
+            axisXG.style('opacity', axisOp);
+            axisYG.style('opacity', axisOp);
+          }
+          if (zt > 0.85) liveWrap.classList.remove('is-visible');
           rafId = requestAnimationFrame(frame);
         } else {
-          showFullChart();
+          showFullView();
         }
       }
-      setViewBox(points[0].x, points[0].y, 55 * ASPECT, 55);
+      setCamera(points[0].x, points[0].y, K_START);
       rafId = requestAnimationFrame(frame);
     }
 
@@ -520,6 +542,13 @@
       });
     }, { threshold: 0.4 });
     io.observe(container);
+
+    if (replayBtn) {
+      replayBtn.addEventListener('click', function () {
+        if (rafId) cancelAnimationFrame(rafId);
+        play();
+      });
+    }
   }
 
   /* ---------- Boot ---------- */

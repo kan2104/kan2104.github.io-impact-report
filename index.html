@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
+<script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
 <div class="root">
@@ -302,12 +303,29 @@
         </div>
       </div>
     </div>
-    <div class="alumni-card" id="alumni-chart-container">
-      <div class="alumni-card-head">
-        <span class="alumni-card-kicker">[ Alumni Network Growth ]</span>
-        <span class="alumni-chart-count">20 <span class="alumni-count-unit">alumni · 2003</span></span>
+    <div class="alumni-panel" id="alumni-chart-container">
+      <div class="alumni-frame">
+        <div class="alumni-topbar">
+          <div class="alumni-live" id="alumni-live">
+            <div class="alumni-live-year" id="alumni-live-year">2002</div>
+            <div class="alumni-live-count" id="alumni-live-count">0 alumni</div>
+          </div>
+        </div>
+        <div class="alumni-axis-caption">
+          <span><span class="bar"></span>Chaos</span>
+          <span>Clarity<span class="bar"></span></span>
+        </div>
+        <div class="alumni-svg-wrap">
+          <svg class="alumni-svg" id="alumni-svg"></svg>
+        </div>
+        <div class="alumni-final" id="alumni-final">
+          <div class="alumni-final-num" id="alumni-final-num">0</div>
+          <div class="alumni-final-label">Alumni and Growing</div>
+        </div>
+        <div class="alumni-footer">
+          <button class="alumni-replay" id="alumni-replay">Replay ↻</button>
+        </div>
       </div>
-      <div class="alumni-chart-body"></div>
     </div>
   </section>
 

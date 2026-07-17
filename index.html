@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
+<script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
 <div class="root">
@@ -216,9 +217,13 @@
     <p class="section-lede" style="margin-bottom:40px">As alumni advance into executive roles, they open doors for the next generation — extending economic mobility to exponentially more people. <i>Organization's</i> programs span every career stage, from first job to the C-suite.</p>
 
     <div style="margin-bottom:56px">
-      <canvas id="multiplier-canvas" class="multiplier-canvas"></canvas>
+      <div class="multiplier-canvas-wrap">
+        <svg id="multiplier-canvas" class="multiplier-canvas"></svg>
+        <div class="network-tooltip" id="network-tooltip"></div>
+        <button class="network-replay" id="network-replay">Replay ↻</button>
+      </div>
       <div class="multiplier-caption-row">
-        <span class="multiplier-caption">Each point is a person across Organization's network, radiating out from the center. Move your cursor through the field to see it push apart.</span>
+        <span class="multiplier-caption">Each point is a person across Organization's network, radiating out from the center. Hover any node to see who it connects.</span>
       </div>
     </div>
 
@@ -302,12 +307,25 @@
         </div>
       </div>
     </div>
-    <div class="alumni-card" id="alumni-chart-container">
-      <div class="alumni-card-head">
-        <span class="alumni-card-kicker">[ Alumni Network Growth ]</span>
-        <span class="alumni-chart-count">20 <span class="alumni-count-unit">alumni · 2003</span></span>
+    <div class="alumni-panel" id="alumni-chart-container">
+      <div class="alumni-frame">
+        <div class="alumni-topbar">
+          <div class="alumni-live" id="alumni-live">
+            <div class="alumni-live-year" id="alumni-live-year">2002</div>
+            <div class="alumni-live-count" id="alumni-live-count">0 alumni</div>
+          </div>
+        </div>
+        <div class="alumni-svg-wrap">
+          <svg class="alumni-svg" id="alumni-svg"></svg>
+        </div>
+        <div class="alumni-final" id="alumni-final">
+          <div class="alumni-final-num" id="alumni-final-num">0</div>
+          <div class="alumni-final-label">Alumni and Growing</div>
+        </div>
+        <div class="alumni-footer">
+          <button class="alumni-replay" id="alumni-replay">Replay ↻</button>
+        </div>
       </div>
-      <div class="alumni-chart-body"></div>
     </div>
   </section>
 

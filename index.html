@@ -217,9 +217,13 @@
     <p class="section-lede" style="margin-bottom:40px">As alumni advance into executive roles, they open doors for the next generation — extending economic mobility to exponentially more people. <i>Organization's</i> programs span every career stage, from first job to the C-suite.</p>
 
     <div style="margin-bottom:56px">
-      <canvas id="multiplier-canvas" class="multiplier-canvas"></canvas>
+      <div class="multiplier-canvas-wrap">
+        <svg id="multiplier-canvas" class="multiplier-canvas"></svg>
+        <div class="network-tooltip" id="network-tooltip"></div>
+        <button class="network-replay" id="network-replay"><span>Replay</span></button>
+      </div>
       <div class="multiplier-caption-row">
-        <span class="multiplier-caption">Each point is a person across Organization's network, radiating out from the center. Move your cursor through the field to see it push apart.</span>
+        <span class="multiplier-caption">Each point is a person across Organization's network, radiating out from the center. Hover any node to see who it connects.</span>
       </div>
     </div>
 

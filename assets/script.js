@@ -34,6 +34,79 @@
     { year: 2026, value: 16016 },
   ];
 
+  // -----------------------------------------------------------------------
+  // EDIT ME: network graph data for "The Multiplier Effect". Organization
+  // sits at the center; Fellows/Alumni are 1st-degree connections; their
+  // institutional ties (Employer/University/etc.) are 2nd-degree; the outer
+  // cloud of personal/professional relationships is 3rd-degree. Regenerated
+  // fresh on each page load — re-run buildNetworkData() for a new layout.
+  // -----------------------------------------------------------------------
+  const networkData = (function buildNetworkData() {
+    var nodes = [];
+    var links = [];
+
+    nodes.push({ id: 'org', label: 'Organization', layer: 1, type: 'org' });
+
+    var fellowCount = 8, alumniCount = 12;
+    for (var i = 1; i <= fellowCount; i++) {
+      var fid = 'fellow-' + i;
+      nodes.push({ id: fid, label: 'Fellow ' + i, layer: 2, type: 'fellow' });
+      links.push({ source: 'org', target: fid });
+    }
+    for (var a = 1; a <= alumniCount; a++) {
+      var aid = 'alumni-' + a;
+      nodes.push({ id: aid, label: 'Alumni ' + a, layer: 2, type: 'alumni' });
+      links.push({ source: 'org', target: aid });
+    }
+
+    var layer2Ids = nodes.filter(function (n) { return n.layer === 2; }).map(function (n) { return n.id; });
+    function randomParent(ids) { return ids[Math.floor(Math.random() * ids.length)]; }
+
+    var layer3Categories = ['Employer', 'University', 'Community Partner', 'Nonprofit', 'Foundation'];
+    var l3i = 0;
+    layer3Categories.forEach(function (cat) {
+      for (var i = 1; i <= 5; i++) {
+        var id = 'l3-' + (l3i++);
+        nodes.push({ id: id, label: cat + ' ' + i, layer: 3, type: 'labeled3' });
+        links.push({ source: randomParent(layer2Ids), target: id });
+      }
+    });
+    var l3UnlabeledCount = 15;
+    for (var u3 = 0; u3 < l3UnlabeledCount; u3++) {
+      var uid3 = 'l3-' + (l3i++);
+      nodes.push({ id: uid3, label: null, layer: 3, type: 'generic3' });
+      links.push({ source: randomParent(layer2Ids), target: uid3 });
+    }
+
+    var layer3Ids = nodes.filter(function (n) { return n.layer === 3; }).map(function (n) { return n.id; });
+    var layer4LabelPool = ['Colleagues', 'Family', 'Friends', 'Volunteer', 'Donor', 'Policy', 'Research', 'Colleagues', 'Family'];
+    var l4i = 0;
+    layer4LabelPool.forEach(function (label) {
+      var id = 'l4-' + (l4i++);
+      nodes.push({ id: id, label: label, layer: 4, type: 'labeled4' });
+      links.push({ source: randomParent(layer3Ids), target: id });
+    });
+    var l4UnlabeledCount = 50 - layer4LabelPool.length;
+    for (var u4 = 0; u4 < l4UnlabeledCount; u4++) {
+      var uid4 = 'l4-' + (l4i++);
+      nodes.push({ id: uid4, label: null, layer: 4, type: 'generic4' });
+      links.push({ source: randomParent(layer3Ids), target: uid4 });
+    }
+
+    // Stable string key + target layer, computed while source/target are
+    // still plain id strings. d3-force mutates link.source/link.target into
+    // resolved node object references the moment a link is bound to the
+    // simulation — a join key or layer filter that reads those fields later
+    // would silently break (or throw) once earlier layers' links have
+    // already been through that mutation.
+    links.forEach(function (l) {
+      l.id = l.source + '~' + l.target;
+      l.targetLayer = nodes.filter(function (n) { return n.id === l.target; })[0].layer;
+    });
+
+    return { nodes: nodes, links: links };
+  })();
+
   /* ---------- Stat counters ---------- */
   function formatStat(card, raw) {
     if (card.dataset.static) return card.dataset.static;
@@ -102,197 +175,231 @@
     });
   }
 
-  /* ---------- Multiplier Effect: radial hub-and-spoke particle field ---------- */
-  // A dense field of clusters arranged in a ring around one distinct central
-  // node (Organization), connected by spokes. Cursor movement repels nearby
-  // nodes away, like a force field pushing through the network.
-  function buildRadialField() {
-    var PALETTE = [
-      { fill: '#85c093', stroke: 'none', sw: 0 },          // moss solid
-      { fill: 'transparent', stroke: '#09352e', sw: 0.8 }, // hollow ink
-      { fill: '#77aa83', stroke: 'none', sw: 0 },          // muted sage
-      { fill: 'transparent', stroke: '#117025', sw: 0.9 }, // hollow pine
-      { fill: '#09352e', stroke: 'none', sw: 0 },          // forest ink solid
-      { fill: '#cad3d2', stroke: 'none', sw: 0 },          // lichen faint
-    ];
-    var hub = {
-      baseX: 0, baseY: 0, x: 0, y: 0, ready: false,
-      r: 10, fill: '#09352e', stroke: 'none', sw: 0,
-      phase: 0, ampX: 0, ampY: 0, freqX: 0, freqY: 0, vx: 0, vy: 0, isHub: true,
-    };
-    var particles = [hub];
-    var edges = [];
-    var clusterCount = 9;
-    var R1 = 170;
+  /* ---------- Multiplier Effect: D3 force-directed network ---------- */
+  // Organization sits fixed at the center; Fellows/Alumni (1st degree) are
+  // added first and radiate out; their institutional ties (2nd degree) are
+  // added next as the camera starts pulling back; the outer cloud of
+  // personal/professional relationships (3rd degree) is added last as the
+  // camera finishes zooming out to the full network. After the reveal, the
+  // simulation is left running at a low alphaTarget so the graph keeps
+  // breathing gently, and hover reveals a node's connections + a tooltip.
+  var NETWORK_NODE_COLOR = {
+    org: '#007010',      // --fern
+    fellow: '#117025',   // --pine
+    alumni: '#433787',   // --indigo
+    labeled3: '#85c093', // --moss
+    generic3: '#85c093', // --moss
+    labeled4: '#6c7a79', // --ink-soft
+    generic4: '#6c7a79', // --ink-soft
+  };
+  var NETWORK_NODE_RADIUS = {
+    org: 22, fellow: 11, alumni: 11,
+    labeled3: 6, generic3: 3.5,
+    labeled4: 4, generic4: 2.2,
+  };
+  var NETWORK_LAYER_RADIAL = { 1: 0, 2: 95, 3: 175, 4: 250 };
+  var NETWORK_LAYER_CHARGE = { 1: -60, 2: -40, 3: -14, 4: -6 };
 
-    for (var c = 0; c < clusterCount; c++) {
-      var angle = (360 / clusterCount) * c;
-      var rad = (angle * Math.PI) / 180;
-      var cx = R1 * Math.cos(rad), cy = R1 * Math.sin(rad);
-      var palette = PALETTE[c % PALETTE.length];
-      var clusterParticles = [];
-      var n = 46 + Math.floor(Math.random() * 14);
-      for (var i = 0; i < n; i++) {
-        var jr = Math.sqrt(Math.random()) * 58;
-        var ja = Math.random() * Math.PI * 2;
-        var bx = cx + jr * Math.cos(ja), by = cy + jr * Math.sin(ja);
-        var p = {
-          baseX: bx, baseY: by, x: 0, y: 0, ready: false,
-          r: 1.6 + Math.random() * 1.8,
-          fill: palette.fill, stroke: palette.stroke, sw: palette.sw,
-          phase: Math.random() * Math.PI * 2,
-          ampX: 3 + Math.random() * 4, ampY: 3 + Math.random() * 4,
-          freqX: 0.35 + Math.random() * 0.3, freqY: 0.35 + Math.random() * 0.3,
-          vx: 0, vy: 0,
-        };
-        particles.push(p);
-        clusterParticles.push(p);
-      }
-      clusterParticles.slice(0, 4).forEach(function (p) { edges.push({ a: hub, b: p, stroke: '#cad3d2', width: 1, op: 0.55 }); });
-      clusterParticles.forEach(function (p, i) {
-        var order = clusterParticles
-          .map(function (q, j) { return [j === i ? Infinity : Math.hypot(p.baseX - q.baseX, p.baseY - q.baseY), j]; })
-          .sort(function (a, b) { return a[0] - b[0]; }).slice(0, 2);
-        order.forEach(function (pair) { edges.push({ a: p, b: clusterParticles[pair[1]], stroke: '#cad3d2', width: 0.5, op: 0.4 }); });
-      });
-
-      for (var s = 0; s < 2; s++) {
-        var sAngle = angle + (s === 0 ? -15 : 15);
-        var srad = (sAngle * Math.PI) / 180;
-        var scx = (R1 + 108) * Math.cos(srad), scy = (R1 + 108) * Math.sin(srad);
-        var satParticles = [];
-        var sn = 24 + Math.floor(Math.random() * 10);
-        for (var k = 0; k < sn; k++) {
-          var sjr = Math.sqrt(Math.random()) * 40;
-          var sja = Math.random() * Math.PI * 2;
-          var sbx = scx + sjr * Math.cos(sja), sby = scy + sjr * Math.sin(sja);
-          var sp = {
-            baseX: sbx, baseY: sby, x: 0, y: 0, ready: false,
-            r: 1.3 + Math.random() * 1.2,
-            fill: 'transparent', stroke: '#9aa6a4', sw: 0.65,
-            phase: Math.random() * Math.PI * 2,
-            ampX: 2 + Math.random() * 3, ampY: 2 + Math.random() * 3,
-            freqX: 0.25 + Math.random() * 0.3, freqY: 0.25 + Math.random() * 0.3,
-            vx: 0, vy: 0,
-          };
-          particles.push(sp);
-          satParticles.push(sp);
-        }
-        var nearest = null, nd = Infinity;
-        clusterParticles.forEach(function (q) { var d = Math.hypot(scx - q.baseX, scy - q.baseY); if (d < nd) { nd = d; nearest = q; } });
-        satParticles.slice(0, 2).forEach(function (p) { edges.push({ a: nearest, b: p, stroke: '#e5e5e5', width: 0.5, op: 0.3 }); });
-        satParticles.forEach(function (p, i) {
-          var order = satParticles
-            .map(function (q, j) { return [j === i ? Infinity : Math.hypot(p.baseX - q.baseX, p.baseY - q.baseY), j]; })
-            .sort(function (a, b) { return a[0] - b[0]; }).slice(0, 2);
-          order.forEach(function (pair) { edges.push({ a: p, b: satParticles[pair[1]], stroke: '#e5e5e5', width: 0.4, op: 0.25 }); });
-        });
-      }
-    }
-
-    return { particles: particles, edges: edges };
+  function networkLayerDescriptor(d) {
+    if (d.layer === 1) return 'Center of network';
+    if (d.layer === 2) return (d.type === 'fellow' ? 'Fellow' : 'Alumni') + ' · 1st degree';
+    if (d.layer === 3) return '2nd degree connection';
+    return '3rd degree connection';
   }
 
-  function initMultiplierCanvas(canvas) {
-    var field = buildRadialField();
-    var ctx = canvas.getContext('2d');
-    var dpr = window.devicePixelRatio || 1;
-    var size = { w: 0, h: 0 };
+  function initMultiplierCanvas(svgEl) {
+    if (typeof d3 === 'undefined') return;
+
+    var wrap = svgEl.closest('.multiplier-canvas-wrap');
+    var tooltip = document.getElementById('network-tooltip');
+    var replayBtn = document.getElementById('network-replay');
+    var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    var svg = d3.select(svgEl);
+    var W = 0, H = 0;
+    var camera = svg.append('g').attr('class', 'network-camera');
+    var linksG = camera.append('g').attr('class', 'network-links');
+    var nodesG = camera.append('g').attr('class', 'network-nodes');
+
+    var nodeById = {};
+    networkData.nodes.forEach(function (n) { nodeById[n.id] = n; });
+
+    var activeNodes = [];
+    var activeLinks = [];
+
+    var simulation = d3.forceSimulation()
+      .force('link', d3.forceLink().id(function (d) { return d.id; }).distance(function (l) {
+        var s = typeof l.source === 'object' ? l.source : nodeById[l.source];
+        var t = typeof l.target === 'object' ? l.target : nodeById[l.target];
+        var maxLayer = Math.max(s.layer, t.layer);
+        return maxLayer === 2 ? 70 : maxLayer === 3 ? 42 : 26;
+      }).strength(0.6))
+      .force('charge', d3.forceManyBody().strength(function (d) { return NETWORK_LAYER_CHARGE[d.layer]; }))
+      .force('collide', d3.forceCollide().radius(function (d) { return NETWORK_NODE_RADIUS[d.type] + 2; }))
+      .force('radial', d3.forceRadial(function (d) { return NETWORK_LAYER_RADIAL[d.layer]; }, 0, 0).strength(0.12))
+      .alphaDecay(0.03)
+      .velocityDecay(0.45)
+      .stop();
+
+    function ticked() {
+      nodesG.selectAll('g.network-node').attr('transform', function (d) { return 'translate(' + d.x + ',' + d.y + ')'; });
+      linksG.selectAll('line')
+        .attr('x1', function (d) { return d.source.x; }).attr('y1', function (d) { return d.source.y; })
+        .attr('x2', function (d) { return d.target.x; }).attr('y2', function (d) { return d.target.y; });
+    }
+    simulation.on('tick', ticked);
 
     function resize() {
-      var rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      size = { w: rect.width, h: rect.height };
+      var rect = svgEl.getBoundingClientRect();
+      W = rect.width; H = rect.height;
+      svgEl.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
     }
     resize();
     window.addEventListener('resize', resize);
 
-    var mouse = { x: null, y: null, active: false };
-    canvas.addEventListener('mousemove', function (e) {
-      var rect = canvas.getBoundingClientRect();
-      mouse.x = e.clientX - rect.left;
-      mouse.y = e.clientY - rect.top;
-      mouse.active = true;
-    });
-    canvas.addEventListener('mouseleave', function () { mouse.active = false; });
+    function setCameraTransform(scale, cx, cy, duration) {
+      var tx = W / 2 - scale * cx;
+      var ty = H / 2 - scale * cy;
+      var transform = 'translate(' + tx + ',' + ty + ') scale(' + scale + ')';
+      if (duration) camera.transition().duration(duration).ease(d3.easeCubicInOut).attr('transform', transform);
+      else camera.interrupt().attr('transform', transform);
+    }
 
-    var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var SPRING = 0.055;
-    var DAMPING = 0.8;
-    var REPEL_RADIUS = 130;
-    var REPEL_STRENGTH = 0.9;
-    var start = performance.now();
+    function fitCamera(nodes, padding, duration) {
+      if (!nodes.length) return;
+      var x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+      nodes.forEach(function (d) {
+        x0 = Math.min(x0, d.x); x1 = Math.max(x1, d.x);
+        y0 = Math.min(y0, d.y); y1 = Math.max(y1, d.y);
+      });
+      var w = Math.max(60, x1 - x0 + padding * 2);
+      var h = Math.max(60, y1 - y0 + padding * 2);
+      var scale = Math.min(W / w, H / h, 6);
+      setCameraTransform(scale, (x0 + x1) / 2, (y0 + y1) / 2, duration);
+    }
 
-    function draw(now) {
-      var t = (now - start) / 1000;
-      var w = size.w, h = size.h;
-      var scale = Math.min(w, h) / 600;
+    function updateSim() {
+      simulation.nodes(activeNodes);
+      simulation.force('link').links(activeLinks);
+      simulation.alpha(0.9).restart();
+    }
 
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, w, h);
+    function renderJoin(orgDuration) {
+      var nodeSel = nodesG.selectAll('g.network-node').data(activeNodes, function (d) { return d.id; });
+      var nodeEnter = nodeSel.enter().append('g')
+        .attr('class', 'network-node')
+        .on('mouseenter', onNodeEnter)
+        .on('mousemove', onNodeMove)
+        .on('mouseleave', onNodeLeave);
+      nodeEnter.append('circle')
+        .attr('class', 'network-node-core')
+        .attr('r', 0)
+        .attr('fill', function (d) { return NETWORK_NODE_COLOR[d.type]; });
+      var dur = reduceMotion ? 0 : (orgDuration || 550);
+      nodeEnter.select('circle').transition().duration(dur).ease(d3.easeBackOut.overshoot(1.5))
+        .attr('r', function (d) { return NETWORK_NODE_RADIUS[d.type]; });
 
-      var mAX = null, mAY = null;
-      if (mouse.active) {
-        mAX = (mouse.x - w / 2) / scale;
-        mAY = (mouse.y - h / 2) / scale;
+      var linkSel = linksG.selectAll('line').data(activeLinks, function (d) { return d.id; });
+      linkSel.enter().append('line')
+        .attr('class', 'network-link')
+        .attr('stroke', '#cad3d2')
+        .attr('stroke-width', 0.75)
+        .attr('stroke-opacity', 0)
+        .transition().duration(reduceMotion ? 0 : 500).attr('stroke-opacity', 0.55);
+    }
+
+    function addLayer(layerNum, duration) {
+      var newNodes = networkData.nodes.filter(function (n) { return n.layer === layerNum; });
+      var newLinks = networkData.links.filter(function (l) { return l.targetLayer === layerNum; });
+      activeNodes = activeNodes.concat(newNodes);
+      activeLinks = activeLinks.concat(newLinks);
+      updateSim();
+      renderJoin(duration);
+    }
+
+    function onNodeEnter(event, d) {
+      d3.select(this).classed('is-hovered', true).raise();
+      linksG.selectAll('line')
+        .classed('is-highlighted', function (l) { return l.source.id === d.id || l.target.id === d.id; });
+      showTooltip(d, event);
+    }
+    function onNodeMove(event) { positionTooltip(event); }
+    function onNodeLeave() {
+      d3.select(this).classed('is-hovered', false);
+      linksG.selectAll('line').classed('is-highlighted', false);
+      hideTooltip();
+    }
+
+    function showTooltip(d, event) {
+      if (!tooltip) return;
+      tooltip.innerHTML = '<div class="tt-label">' + (d.label || 'Connection') + '</div><div class="tt-layer">' + networkLayerDescriptor(d) + '</div>';
+      tooltip.classList.add('is-visible');
+      positionTooltip(event);
+    }
+    function positionTooltip(event) {
+      if (!tooltip || !wrap) return;
+      var rect = wrap.getBoundingClientRect();
+      tooltip.style.left = (event.clientX - rect.left + 14) + 'px';
+      tooltip.style.top = (event.clientY - rect.top + 14) + 'px';
+    }
+    function hideTooltip() { if (tooltip) tooltip.classList.remove('is-visible'); }
+
+    var pendingTimers = [];
+    function clearPending() { pendingTimers.forEach(clearTimeout); pendingTimers = []; simulation.stop(); }
+
+    function play() {
+      clearPending();
+      hideTooltip();
+      nodesG.selectAll('*').remove();
+      linksG.selectAll('*').remove();
+
+      var org = nodeById.org;
+      org.x = 0; org.y = 0; org.fx = 0; org.fy = 0;
+      activeNodes = [org];
+      activeLinks = [];
+      updateSim();
+      renderJoin(reduceMotion ? 0 : 900);
+      // Frame roughly org + the 1st-degree ring's eventual extent before
+      // those nodes exist, so the arrival doesn't jump-cut once they do.
+      setCameraTransform(Math.min(W, H) / ((NETWORK_LAYER_RADIAL[2] + 40) * 2), 0, 0, 0);
+
+      if (reduceMotion) {
+        activeNodes = networkData.nodes.slice();
+        activeLinks = networkData.links.slice();
+        updateSim();
+        renderJoin(0);
+        for (var i = 0; i < 200; i++) simulation.tick();
+        ticked();
+        fitCamera(activeNodes, 40, 0);
+        simulation.alphaTarget(0.01).restart();
+        return;
       }
 
-      var particles = field.particles, edges = field.edges;
-
-      particles.forEach(function (p) {
-        var driftX = reduceMotion ? 0 : Math.sin(t * p.freqX + p.phase) * p.ampX;
-        var driftY = reduceMotion ? 0 : Math.cos(t * p.freqY + p.phase) * p.ampY;
-        var targetX = p.baseX + driftX;
-        var targetY = p.baseY + driftY;
-
-        var ax = (targetX - p.x) * SPRING;
-        var ay = (targetY - p.y) * SPRING;
-
-        if (mouse.active && !reduceMotion) {
-          var dx = p.x - mAX;
-          var dy = p.y - mAY;
-          var dist = Math.hypot(dx, dy);
-          if (dist < REPEL_RADIUS && dist > 0.01) {
-            var falloff = 1 - dist / REPEL_RADIUS;
-            ax += (dx / dist) * falloff * falloff * REPEL_STRENGTH;
-            ay += (dy / dist) * falloff * falloff * REPEL_STRENGTH;
-          }
-        }
-
-        p.vx = (p.vx + ax) * DAMPING;
-        p.vy = (p.vy + ay) * DAMPING;
-        if (!p.ready) { p.x = targetX; p.y = targetY; p.ready = true; }
-        p.x += p.vx;
-        p.y += p.vy;
-      });
-
-      ctx.save();
-      ctx.translate(w / 2, h / 2);
-      ctx.scale(scale, scale);
-
-      edges.forEach(function (e) {
-        ctx.beginPath();
-        ctx.moveTo(e.a.x, e.a.y);
-        ctx.lineTo(e.b.x, e.b.y);
-        ctx.strokeStyle = e.stroke;
-        ctx.globalAlpha = e.op;
-        ctx.lineWidth = e.width;
-        ctx.stroke();
-      });
-
-      ctx.globalAlpha = 1;
-      particles.forEach(function (p) {
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        if (p.fill && p.fill !== 'transparent') { ctx.fillStyle = p.fill; ctx.fill(); }
-        if (p.sw > 0) { ctx.strokeStyle = p.stroke; ctx.lineWidth = p.sw; ctx.stroke(); }
-      });
-
-      ctx.restore();
-      requestAnimationFrame(draw);
+      pendingTimers.push(setTimeout(function () { addLayer(2, 650); }, 1000));
+      pendingTimers.push(setTimeout(function () {
+        addLayer(3, 500);
+        fitCamera(activeNodes, 55, 1500);
+      }, 2500));
+      pendingTimers.push(setTimeout(function () {
+        addLayer(4, 400);
+        fitCamera(networkData.nodes, 45, 2000);
+      }, 4000));
+      pendingTimers.push(setTimeout(function () {
+        simulation.alphaTarget(0.015).restart();
+      }, 7000));
     }
-    requestAnimationFrame(draw);
+
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          play();
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.3 });
+    io.observe(svgEl);
+
+    if (replayBtn) replayBtn.addEventListener('click', play);
   }
 
   /* ---------- Alumni Network Growth: cinematic zoom-and-follow chart ---------- */

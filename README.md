@@ -1,2 +1,2 @@
 # kan2104.github.io-impact-report
-Example impact report (sensitive information redacted)
+Impact Report (sensitive information redacted)

@@ -39,3 +39,4 @@ This sample in a larger portfolio showcases a mix of three skills:
 | **Quantitative & Data Science** | Advanced statistical analysis, machine learning, predictive modeling |
 | **Writing & Storytelling** | Think pieces, impact reports, funder narratives |
 | **Data Engineering & Frontend** | Pipelines, dashboards, interactive data visualization |
+| **Primary & Mixed-Methods Research** | Consumer insights, audience segmentation, program evaluation, outcomes measurement, survey science, qualitative synthesis |

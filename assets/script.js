@@ -477,7 +477,7 @@
     var axisXG = camera.append('g').attr('class', 'axis-x').style('opacity', 0);
     var axisYG = camera.append('g').attr('class', 'axis-y').style('opacity', 0);
 
-    var W = 0, H = 0, points = [], segLens = [], totalLen = 0;
+    var W = 0, H = 0, points = [], segLens = [], totalLen = 0, renderedLen = 0;
 
     function layout() {
       // Measure the <svg> itself, not the outer panel — the panel's flex
@@ -502,8 +502,18 @@
       }
 
       var lineGen = d3.line().x(function (p) { return p.x; }).y(function (p) { return p.y; }).curve(d3.curveMonotoneX);
-      glowPath.attr('d', lineGen(points));
-      linePath.attr('d', lineGen(points));
+      var pathD = lineGen(points);
+      glowPath.attr('d', pathD);
+      linePath.attr('d', pathD);
+      // The dash-reveal must match the path's REAL rendered length, not the
+      // straight-line distance between points used for camera/arc-length
+      // math below — curveMonotoneX bows outward between points, so it's
+      // measurably longer than that straight-line total. A mismatch there
+      // understates the dash pattern's length, and since a single-value
+      // stroke-dasharray repeats forever, the reveal was cycling a second
+      // partial dash-gap-dash near the end of the animation, showing up as
+      // a disconnected floating line segment beyond a gap.
+      renderedLen = linePath.node().getTotalLength();
 
       // Dense, fixed-pixel-spacing vertical rules — a decorative "ruled
       // notebook paper" texture behind the chart, independent of the year
@@ -624,8 +634,8 @@
       axisYG.style('opacity', 0);
       finalWrap.classList.remove('is-visible');
       liveWrap.classList.add('is-visible');
-      glowPath.attr('stroke-dasharray', totalLen).attr('stroke-dashoffset', totalLen);
-      linePath.attr('stroke-dasharray', totalLen).attr('stroke-dashoffset', totalLen);
+      glowPath.attr('stroke-dasharray', renderedLen).attr('stroke-dashoffset', renderedLen);
+      linePath.attr('stroke-dasharray', renderedLen).attr('stroke-dashoffset', renderedLen);
 
       if (reduceMotion) {
         glowPath.attr('stroke-dashoffset', 0);
@@ -646,8 +656,8 @@
           var cur = pointAtLenFraction(t);
           var k = K_START + (K_FOLLOW_END - K_START) * Math.sqrt(t);
           setCamera(cur.x, cur.y, k);
-          glowPath.attr('stroke-dashoffset', totalLen * (1 - t));
-          linePath.attr('stroke-dashoffset', totalLen * (1 - t));
+          glowPath.attr('stroke-dashoffset', renderedLen * (1 - t));
+          linePath.attr('stroke-dashoffset', renderedLen * (1 - t));
           revealDotsUpTo(cur.x);
           liveYear.textContent = String(Math.round(cur.year));
           liveCount.textContent = Math.round(cur.value).toLocaleString('en-US') + ' alumni';

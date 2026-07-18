@@ -477,7 +477,7 @@
     var axisXG = camera.append('g').attr('class', 'axis-x').style('opacity', 0);
     var axisYG = camera.append('g').attr('class', 'axis-y').style('opacity', 0);
 
-    var W = 0, H = 0, points = [], segLens = [], totalLen = 0;
+    var W = 0, H = 0, points = [], segLens = [], totalLen = 0, renderedLen = 0;
 
     function layout() {
       // Measure the <svg> itself, not the outer panel — the panel's flex
@@ -514,7 +514,7 @@
       // partial dash-gap-dash near the end of the animation, showing up as
       // a disconnected floating line segment beyond a gap.
       renderedLen = linePath.node().getTotalLength();
-      
+
       // Dense, fixed-pixel-spacing vertical rules — a decorative "ruled
       // notebook paper" texture behind the chart, independent of the year
       // scale (unlike the tick years below, which still map to real dates).
@@ -656,8 +656,8 @@
           var cur = pointAtLenFraction(t);
           var k = K_START + (K_FOLLOW_END - K_START) * Math.sqrt(t);
           setCamera(cur.x, cur.y, k);
-          glowPath.attr('stroke-dashoffset', totalLen * (1 - t));
-          linePath.attr('stroke-dashoffset', totalLen * (1 - t));
+          glowPath.attr('stroke-dashoffset', renderedLen * (1 - t));
+          linePath.attr('stroke-dashoffset', renderedLen * (1 - t));
           revealDotsUpTo(cur.x);
           liveYear.textContent = String(Math.round(cur.year));
           liveCount.textContent = Math.round(cur.value).toLocaleString('en-US') + ' alumni';
